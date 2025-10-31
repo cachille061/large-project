@@ -18,6 +18,9 @@ const client = new MongoClient(process.env.MONGODB_URI);
 await client.connect();
 const db = client.db(); // Uses the database specified in the connection string
 
+console.log('Google OAuth enabled:', !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET));
+console.log('GitHub OAuth enabled:', !!(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET));
+
 export const auth = betterAuth({
     // Use MongoDB adapter with both db and client
     database: mongodbAdapter(db, { client }),

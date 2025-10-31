@@ -36,6 +36,44 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 // NOW you can use express.json() for other routes
 app.use(express.json());
 
+// TEMPORARY: Test OAuth sign-in endpoint - with auto redirect
+app.get("/test-google-oauth", async (req, res) => {
+    try {
+        const result = await auth.api.signInSocial({
+            body: {
+                provider: "google",
+            },
+        });
+
+        // If there's a URL, redirect to it
+        if (result && typeof result === 'object' && 'url' in result) {
+            return res.redirect(result.url as string);
+        }
+
+        res.json(result);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get("/test-github-oauth", async (req, res) => {
+    try {
+        const result = await auth.api.signInSocial({
+            body: {
+                provider: "github",
+            },
+        });
+
+        // If there's a URL, redirect to it
+        if (result && typeof result === 'object' && 'url' in result) {
+            return res.redirect(result.url as string);
+        }
+
+        res.json(result);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
 // Example protected route
 app.get("/api/protected", requireAuth, (req, res) => {
     res.json({
