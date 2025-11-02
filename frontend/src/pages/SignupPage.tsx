@@ -61,7 +61,7 @@ export function SignupPage() {
             Create an account
           </CardTitle>
           <CardDescription style={{ textAlign: 'center', fontSize: '14px', color: '#66655F' }}>
-            Join MyTechMarket today
+            Join CoreMarket today
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>

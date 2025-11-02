@@ -48,7 +48,7 @@ export function LoginPage() {
             Welcome back
           </CardTitle>
           <CardDescription style={{ textAlign: 'center', fontSize: '14px', color: '#66655F' }}>
-            Sign in to your MyTechMarket account
+            Sign in to your CoreMarket account
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
