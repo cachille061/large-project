@@ -1,0 +1,385 @@
+/**
+ * Common Utility Classes
+ * Frequently used style patterns to reduce inline styles
+ */
+
+/* ==================== FLEXBOX UTILITIES ==================== */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-col-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==================== GRID UTILITIES ==================== */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 24px;
+}
+
+.search-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+/* ==================== CONTAINER UTILITIES ==================== */
+.container-page {
+  width: 100%;
+  padding: 24px;
+}
+
+.container-centered {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.container-narrow {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ==================== TEXT UTILITIES ==================== */
+.text-heading-primary {
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--color-primary-300, #285570);
+  margin-bottom: 12px;
+}
+
+.text-heading-secondary {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--color-primary-300, #285570);
+  margin-bottom: 8px;
+}
+
+.text-muted {
+  color: var(--color-text-secondary, #66655F);
+  font-size: 16px;
+}
+
+.text-small {
+  font-size: 14px;
+}
+
+.text-tiny {
+  font-size: 12px;
+}
+
+/* ==================== TRUNCATION ==================== */
+.truncate-1 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.truncate-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ==================== IMAGE UTILITIES ==================== */
+.image-container {
+  position: relative;
+  padding-top: 75%;
+  overflow: hidden;
+  border-radius: 12px;
+  background-color: var(--color-surface-muted, #F5F3F1);
+}
+
+.image-absolute {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ==================== CARD UTILITIES ==================== */
+.card-base {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+}
+
+/* ==================== SPACING UTILITIES ==================== */
+.space-y-sm > * + * {
+  margin-top: 8px;
+}
+
+.space-y-md > * + * {
+  margin-top: 16px;
+}
+
+.space-y-lg > * + * {
+  margin-top: 24px;
+}
+
+.gap-sm {
+  gap: 8px;
+}
+
+.gap-md {
+  gap: 16px;
+}
+
+.gap-lg {
+  gap: 24px;
+}
+
+/* ==================== BADGE UTILITIES ==================== */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-primary {
+  background-color: var(--color-primary-500, #3B7290);
+  color: white;
+}
+
+.badge-success {
+  background-color: #10B981;
+  color: white;
+}
+
+.badge-muted {
+  background-color: var(--color-surface-alt, #E3DED7);
+  color: var(--color-text-primary, #333);
+}
+
+/* ==================== POSITION UTILITIES ==================== */
+.absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.absolute-fill {
+  position: absolute;
+  inset: 0;
+}
+
+/* ==================== LAYOUT UTILITIES ==================== */
+.grid-cols-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.divider-y {
+  border-top: 1px solid var(--color-border, #E8E7E5);
+  border-bottom: 1px solid var(--color-border, #E8E7E5);
+  padding: 16px 0;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-sm {
+  font-size: 14px;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.image-bg-dark {
+  background-color: #000000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.card-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* ==================== PROFILE PAGE UTILITIES ==================== */
+.profile-banner {
+  border-radius: 16px;
+  padding: 48px 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 20px rgba(40, 85, 112, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-banner-gradient {
+  background: linear-gradient(135deg, #285570 0%, #1e3f54 100%);
+}
+
+.profile-banner-decoration {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 300px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  transform: translate(30%, -30%);
+}
+
+.profile-avatar-large {
+  width: 100px;
+  height: 100px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+}
+
+.profile-banner-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 8px 16px;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.profile-banner-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.profile-banner-input-panel {
+  position: absolute;
+  top: 56px;
+  right: 16px;
+  background-color: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 3;
+  min-width: 300px;
+}
+
+.profile-name {
+  font-size: 32px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 8px;
+  font-family: "Dancing Script", "Segoe Script", cursive;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.profile-member-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-primary-300, #1C3D51);
+  margin-bottom: 4px;
+}
+
+.profile-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.profile-product-card {
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #E8E7E5;
+}
+
+.profile-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.profile-empty-state {
+  border-color: #E8E7E5;
+  background-color: white;
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.primary-button {
+  padding: 12px 24px;
+  background-color: #285570;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primary-button:hover {
+  background-color: #1e3f54;
+}

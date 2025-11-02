@@ -1,0 +1,260 @@
+/**
+ * NAUTICAL COLOR SYSTEM
+ * Base palette inspired by ocean, sand, and maritime themes
+ * Supports both light and dark modes with full semantic tokens
+ */
+
+:root {
+  /* ==================== BASE PALETTE ==================== */
+  --color-primary-base: #285570;
+  --color-surface-alt-base: #E3DED7;
+  --color-background-base: #FAF7F6;
+  --color-neutral-base: #CBCAC7;
+  --color-text-base: #333333;
+
+  /* ==================== PRIMARY SCALE (Deep Teal) ==================== */
+  --color-primary-50: #F0F6F8;
+  --color-primary-100: #D9EAF0;
+  --color-primary-200: #B3D5E0;
+  --color-primary-300: #8DC0D1;
+  --color-primary-400: #5899B5;
+  --color-primary-500: #285570;  /* Base */
+  --color-primary-600: #234A61;
+  --color-primary-700: #1C3D51;
+  --color-primary-800: #163040;
+  --color-primary-900: #0F2330;
+  --color-primary-950: #091620;
+
+  /* ==================== ACCENT (Saturated Teal - +20%) ==================== */
+  --color-accent-50: #EBF7FA;
+  --color-accent-100: #C8EAF2;
+  --color-accent-200: #91D5E5;
+  --color-accent-300: #5AC0D8;
+  --color-accent-400: #2AA6C3;
+  --color-accent-500: #1F8BA8;  /* Primary + 20% saturation */
+  --color-accent-600: #1A7390;
+  --color-accent-700: #155B78;
+  --color-accent-800: #104360;
+  --color-accent-900: #0B2B48;
+
+  /* ==================== NEUTRAL SCALE (Charcoal/Gray) ==================== */
+  --color-neutral-50: #FAFAFA;
+  --color-neutral-100: #F5F5F5;
+  --color-neutral-200: #E8E7E5;
+  --color-neutral-300: #CBCAC7;  /* Base - Mist Gray */
+  --color-neutral-400: #A8A7A3;
+  --color-neutral-500: #85847F;
+  --color-neutral-600: #66655F;
+  --color-neutral-700: #4D4C47;
+  --color-neutral-800: #333333;  /* Base - Charcoal */
+  --color-neutral-900: #1F1F1F;
+  --color-neutral-950: #0D0D0D;
+
+  /* ==================== BACKGROUND & SURFACE ==================== */
+  --color-background: #FAF7F6;  /* Porcelain */
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #E3DED7;  /* Warm Sandstone */
+  --color-surface-muted: #F5F3F1;
+  --color-overlay: rgba(40, 85, 112, 0.5);  /* Primary with 50% opacity */
+
+  /* ==================== BORDERS ==================== */
+  --color-border: #CBCAC7;  /* Mist Gray */
+  --color-border-subtle: #E8E7E5;
+  --color-border-emphasis: #285570;  /* Primary */
+
+  /* ==================== TEXT TOKENS ==================== */
+  --color-text-primary: #333333;  /* Charcoal */
+  --color-text-secondary: #66655F;
+  --color-text-subtle: #85847F;
+  --color-text-inverse: #FFFFFF;
+  --color-text-emphasis: #285570;  /* Primary */
+  --color-text-disabled: #A8A7A3;
+
+  /* ==================== STATE & INTERACTION ==================== */
+  --color-muted: #F5F3F1;
+  --color-emphasis: #285570;
+  --color-disabled: #E8E7E5;
+  --color-disabled-text: #A8A7A3;
+
+  /* ==================== SEMANTIC COLORS (Nautical-themed) ==================== */
+  /* Success - Seaweed Green with teal undertones */
+  --color-success-50: #F0F8F4;
+  --color-success-100: #D4EDE2;
+  --color-success-200: #A9DBC5;
+  --color-success-300: #7EC9A8;
+  --color-success-400: #4FA782;
+  --color-success-500: #2D8560;  /* Main success */
+  --color-success-600: #266D4F;
+  --color-success-700: #1F553F;
+  --color-success-800: #183D2F;
+  --color-success-900: #11251F;
+
+  /* Warning - Sandy Amber */
+  --color-warning-50: #FEF8ED;
+  --color-warning-100: #FCEDC7;
+  --color-warning-200: #F9DB8F;
+  --color-warning-300: #F6C957;
+  --color-warning-400: #E5A826;
+  --color-warning-500: #C68810;  /* Main warning */
+  --color-warning-600: #A36F0D;
+  --color-warning-700: #80560A;
+  --color-warning-800: #5D3D07;
+  --color-warning-900: #3A2404;
+
+  /* Danger - Coral Red with nautical warmth */
+  --color-danger-50: #FEF2F2;
+  --color-danger-100: #FDDEDE;
+  --color-danger-200: #FBBDBD;
+  --color-danger-300: #F99C9C;
+  --color-danger-400: #F56A6A;
+  --color-danger-500: #D84545;  /* Main danger */
+  --color-danger-600: #B53838;
+  --color-danger-700: #922C2C;
+  --color-danger-800: #6F2020;
+  --color-danger-900: #4C1414;
+
+  /* Info - matches primary teal */
+  --color-info-50: var(--color-primary-50);
+  --color-info-100: var(--color-primary-100);
+  --color-info-200: var(--color-primary-200);
+  --color-info-300: var(--color-primary-300);
+  --color-info-400: var(--color-primary-400);
+  --color-info-500: var(--color-primary-500);
+  --color-info-600: var(--color-primary-600);
+  --color-info-700: var(--color-primary-700);
+  --color-info-800: var(--color-primary-800);
+  --color-info-900: var(--color-primary-900);
+
+  /* ==================== HERO GRADIENTS ==================== */
+  --gradient-ocean-mist: linear-gradient(135deg, #FAF7F6 0%, #E3DED7 100%);
+  --gradient-ocean-mist-overlay: linear-gradient(135deg, 
+    rgba(250, 247, 246, 1) 0%, 
+    rgba(227, 222, 215, 1) 100%), 
+    linear-gradient(135deg, 
+      rgba(40, 85, 112, 0.08) 0%, 
+      rgba(40, 85, 112, 0.08) 100%);
+  
+  /* ==================== SHADOWS (Nautical) ==================== */
+  --shadow-sm: 0 1px 2px 0 rgba(40, 85, 112, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(40, 85, 112, 0.08), 0 2px 4px -1px rgba(40, 85, 112, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(40, 85, 112, 0.1), 0 4px 6px -2px rgba(40, 85, 112, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(40, 85, 112, 0.1), 0 10px 10px -5px rgba(40, 85, 112, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(40, 85, 112, 0.15);
+  --shadow-inner: inset 0 2px 4px 0 rgba(40, 85, 112, 0.06);
+}
+
+/* ==================== DARK MODE ==================== */
+.theme-dark,
+[data-theme="dark"] {
+  /* ==================== PRIMARY SCALE (adjusted for dark) ==================== */
+  --color-primary-50: #091620;
+  --color-primary-100: #0F2330;
+  --color-primary-200: #163040;
+  --color-primary-300: #1C3D51;
+  --color-primary-400: #234A61;
+  --color-primary-500: #3B7290;  /* Lighter for dark mode */
+  --color-primary-600: #5899B5;
+  --color-primary-700: #8DC0D1;
+  --color-primary-800: #B3D5E0;
+  --color-primary-900: #D9EAF0;
+  --color-primary-950: #F0F6F8;
+
+  /* ==================== ACCENT (adjusted) ==================== */
+  --color-accent-50: #0B2B48;
+  --color-accent-100: #104360;
+  --color-accent-200: #155B78;
+  --color-accent-300: #1A7390;
+  --color-accent-400: #1F8BA8;
+  --color-accent-500: #2AA6C3;
+  --color-accent-600: #5AC0D8;
+  --color-accent-700: #91D5E5;
+  --color-accent-800: #C8EAF2;
+  --color-accent-900: #EBF7FA;
+
+  /* ==================== NEUTRAL SCALE (inverted) ==================== */
+  --color-neutral-50: #0D0D0D;
+  --color-neutral-100: #1F1F1F;
+  --color-neutral-200: #333333;
+  --color-neutral-300: #4D4C47;
+  --color-neutral-400: #66655F;
+  --color-neutral-500: #85847F;
+  --color-neutral-600: #A8A7A3;
+  --color-neutral-700: #CBCAC7;
+  --color-neutral-800: #E8E7E5;
+  --color-neutral-900: #F5F5F5;
+  --color-neutral-950: #FAFAFA;
+
+  /* ==================== BACKGROUND & SURFACE ==================== */
+  --color-background: #0F1419;  /* Deep sea blue-black */
+  --color-surface: #1A2129;
+  --color-surface-alt: #252E38;  /* Darker sandstone equivalent */
+  --color-surface-muted: #141B22;
+  --color-overlay: rgba(26, 33, 41, 0.8);
+
+  /* ==================== BORDERS ==================== */
+  --color-border: #4D4C47;
+  --color-border-subtle: #333333;
+  --color-border-emphasis: #5899B5;
+
+  /* ==================== TEXT TOKENS ==================== */
+  --color-text-primary: #F5F5F5;
+  --color-text-secondary: #CBCAC7;
+  --color-text-subtle: #A8A7A3;
+  --color-text-inverse: #1F1F1F;
+  --color-text-emphasis: #8DC0D1;
+  --color-text-disabled: #66655F;
+
+  /* ==================== STATE & INTERACTION ==================== */
+  --color-muted: #252E38;
+  --color-emphasis: #5899B5;
+  --color-disabled: #333333;
+  --color-disabled-text: #66655F;
+
+  /* ==================== SEMANTIC COLORS (adjusted for dark) ==================== */
+  --color-success-50: #11251F;
+  --color-success-100: #183D2F;
+  --color-success-200: #1F553F;
+  --color-success-300: #266D4F;
+  --color-success-400: #2D8560;
+  --color-success-500: #4FA782;
+  --color-success-600: #7EC9A8;
+  --color-success-700: #A9DBC5;
+  --color-success-800: #D4EDE2;
+  --color-success-900: #F0F8F4;
+
+  --color-warning-50: #3A2404;
+  --color-warning-100: #5D3D07;
+  --color-warning-200: #80560A;
+  --color-warning-300: #A36F0D;
+  --color-warning-400: #C68810;
+  --color-warning-500: #E5A826;
+  --color-warning-600: #F6C957;
+  --color-warning-700: #F9DB8F;
+  --color-warning-800: #FCEDC7;
+  --color-warning-900: #FEF8ED;
+
+  --color-danger-50: #4C1414;
+  --color-danger-100: #6F2020;
+  --color-danger-200: #922C2C;
+  --color-danger-300: #B53838;
+  --color-danger-400: #D84545;
+  --color-danger-500: #F56A6A;
+  --color-danger-600: #F99C9C;
+  --color-danger-700: #FBBDBD;
+  --color-danger-800: #FDDEDE;
+  --color-danger-900: #FEF2F2;
+
+  /* ==================== HERO GRADIENTS (Dark) ==================== */
+  --gradient-deep-sea: linear-gradient(135deg, #1C3D51 0%, #333333 100%);
+  --gradient-deep-sea-overlay: linear-gradient(135deg, 
+    rgba(28, 61, 81, 1) 0%, 
+    rgba(51, 51, 51, 1) 100%);
+
+  /* ==================== SHADOWS (darker for dark mode) ==================== */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+}
