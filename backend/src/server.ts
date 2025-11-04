@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv';
 import { app } from './app';
 import { connectDB } from '../config/connection';
+import mongoose from "mongoose";
 
 dotenv.config();
 
@@ -15,6 +16,8 @@ const startServer = async () => {
         app.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);
             console.log(`Health check available at http://localhost:${PORT}/health`);
+            console.log('Registered models:', mongoose.modelNames());
+            console.log(`📦 Products endpoint: http://localhost:${PORT}/api/products`);
         });
     } catch (error) {
         console.error('Failed to start server:', error);
