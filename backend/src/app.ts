@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { auth } from "./middlewares/auth";
 import { requireAuth, optionalAuth } from "./middlewares/requireAuth";
 import { toNodeHandler } from "better-auth/node";
+import productRoutes from './routes/productRoutes';
 
 export const app = express();
 
@@ -33,7 +34,6 @@ app.get("/health", (_req, res) => {
 // Better Auth routes - Express v5 syntax with *splat
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
-// NOW you can use express.json() for other routes
 app.use(express.json());
 
 // Example protected route
@@ -51,6 +51,8 @@ app.get("/api/public", optionalAuth, (req, res) => {
         user: req.user || null,
     });
 });
+
+app.use('/api', productRoutes);
 
 app.use((_req, res) => {
     res.status(404).json({ error: "Route not found" });
