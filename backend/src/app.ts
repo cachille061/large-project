@@ -6,6 +6,7 @@ import { auth } from "./middlewares/auth";
 import { requireAuth, optionalAuth } from "./middlewares/requireAuth";
 import { toNodeHandler } from "better-auth/node";
 import productRoutes from './routes/productRoutes';
+import orderRoutes from "./routes/orderRoutes";
 
 export const app = express();
 
@@ -57,3 +58,5 @@ app.use('/api', productRoutes);
 app.use((_req, res) => {
     res.status(404).json({ error: "Route not found" });
 });
+
+app.use("/api/orders", orderRoutes);
