@@ -1,0 +1,411 @@
+/**
+ * VISUAL POLISH & ENHANCEMENTS
+ * Hero gradients, advanced shadows, and visual effects
+ */
+
+/* ==================== HERO GRADIENTS ==================== */
+
+/* Ocean Mist - Light mode hero gradient */
+.gradient-ocean-mist {
+  background: linear-gradient(135deg, #FAF7F6 0%, #E3DED7 100%);
+  position: relative;
+}
+
+.gradient-ocean-mist::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    rgba(40, 85, 112, 0.08) 0%, 
+    rgba(40, 85, 112, 0.04) 100%);
+  pointer-events: none;
+}
+
+/* Deep Sea - Dark mode hero gradient */
+.gradient-deep-sea {
+  background: linear-gradient(135deg, #1C3D51 0%, #333333 100%);
+}
+
+/* Teal Waves - Alternative gradient */
+.gradient-teal-waves {
+  background: linear-gradient(135deg, 
+    #285570 0%, 
+    #5899B5 50%, 
+    #8DC0D1 100%);
+}
+
+/* Sandy Shore - Warm gradient */
+.gradient-sandy-shore {
+  background: linear-gradient(135deg, 
+    #FAF7F6 0%, 
+    #E3DED7 50%, 
+    #CBCAC7 100%);
+}
+
+/* Horizon - Subtle gradient */
+.gradient-horizon {
+  background: linear-gradient(180deg, 
+    var(--color-primary-50) 0%, 
+    var(--color-surface) 100%);
+}
+
+/* Depth - Dramatic gradient */
+.gradient-depth {
+  background: linear-gradient(180deg, 
+    var(--color-primary-900) 0%, 
+    var(--color-primary-700) 50%, 
+    var(--color-primary-500) 100%);
+}
+
+/* ==================== ANIMATED GRADIENTS ==================== */
+
+.gradient-animated {
+  background: linear-gradient(
+    -45deg,
+    #285570,
+    #5899B5,
+    #1F8BA8,
+    #8DC0D1
+  );
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ==================== GLASS MORPHISM ==================== */
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(40, 85, 112, 0.1);
+}
+
+.theme-dark .glass {
+  background: rgba(26, 33, 41, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.theme-dark .glass-strong {
+  background: rgba(26, 33, 41, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ==================== ADVANCED SHADOWS ==================== */
+
+/* Soft Shadow - for cards */
+.shadow-soft {
+  box-shadow: 
+    0 2px 4px rgba(40, 85, 112, 0.04),
+    0 8px 16px rgba(40, 85, 112, 0.08);
+}
+
+/* Sharp Shadow - for buttons */
+.shadow-sharp {
+  box-shadow: 
+    0 1px 2px rgba(40, 85, 112, 0.1),
+    0 4px 8px rgba(40, 85, 112, 0.15);
+}
+
+/* Elevated Shadow - for modals */
+.shadow-elevated {
+  box-shadow: 
+    0 10px 20px rgba(40, 85, 112, 0.1),
+    0 20px 40px rgba(40, 85, 112, 0.15),
+    0 40px 80px rgba(40, 85, 112, 0.2);
+}
+
+/* Glow Shadow - for emphasis */
+.shadow-glow {
+  box-shadow: 
+    0 0 20px rgba(40, 85, 112, 0.3),
+    0 0 40px rgba(40, 85, 112, 0.2);
+}
+
+/* Accent Glow */
+.shadow-accent-glow {
+  box-shadow: 
+    0 0 20px rgba(31, 139, 168, 0.4),
+    0 0 40px rgba(31, 139, 168, 0.2);
+}
+
+/* Inset Shadow - for inputs */
+.shadow-inset-soft {
+  box-shadow: inset 0 2px 4px rgba(40, 85, 112, 0.06);
+}
+
+/* ==================== BORDER STYLES ==================== */
+
+.border-nautical {
+  border: 1px solid var(--color-border);
+}
+
+.border-nautical-emphasis {
+  border: 2px solid var(--color-primary-500);
+}
+
+.border-nautical-gradient {
+  border: 2px solid transparent;
+  background-image: 
+    linear-gradient(var(--color-surface), var(--color-surface)),
+    linear-gradient(135deg, var(--color-primary-400), var(--color-accent-500));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* ==================== HOVER EFFECTS ==================== */
+
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.hover-scale {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-glow {
+  transition: all 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 
+    0 0 20px rgba(40, 85, 112, 0.3),
+    0 0 40px rgba(40, 85, 112, 0.15);
+}
+
+/* ==================== FOCUS RINGS ==================== */
+
+.focus-ring-nautical:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+.focus-ring-accent:focus-visible {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
+}
+
+.focus-ring-soft:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(40, 85, 112, 0.15);
+}
+
+/* ==================== TEXT EFFECTS ==================== */
+
+.text-gradient-nautical {
+  background: linear-gradient(135deg, 
+    var(--color-primary-600), 
+    var(--color-accent-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-primary-600) 0%,
+    var(--color-accent-500) 50%,
+    var(--color-primary-600) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+
+/* ==================== DIVIDERS ==================== */
+
+.divider-nautical {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-border) 50%,
+    transparent 100%
+  );
+}
+
+.divider-gradient {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary-500),
+    var(--color-accent-500)
+  );
+}
+
+/* ==================== OVERLAY EFFECTS ==================== */
+
+.overlay-nautical {
+  position: relative;
+}
+
+.overlay-nautical::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(40, 85, 112, 0.8) 100%
+  );
+  pointer-events: none;
+}
+
+.overlay-mesh {
+  position: relative;
+}
+
+.overlay-mesh::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      rgba(40, 85, 112, 0.03) 0px,
+      transparent 1px,
+      transparent 2px,
+      rgba(40, 85, 112, 0.03) 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(40, 85, 112, 0.03) 0px,
+      transparent 1px,
+      transparent 2px,
+      rgba(40, 85, 112, 0.03) 3px
+    );
+  pointer-events: none;
+}
+
+/* ==================== LOADING STATES ==================== */
+/* Note: Animations moved to src/styles/animations.css */
+
+.loading-wave {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.loading-wave span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-primary-500);
+  animation: wave 1.4s ease-in-out infinite;
+}
+
+.loading-wave span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-wave span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.loading-spinner {
+  border: 3px solid var(--color-neutral-200);
+  border-top-color: var(--color-primary-500);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ==================== PATTERN BACKGROUNDS ==================== */
+
+.pattern-dots {
+  background-image: radial-gradient(
+    circle,
+    var(--color-neutral-300) 1px,
+    transparent 1px
+  );
+  background-size: 20px 20px;
+}
+
+.pattern-grid {
+  background-image: 
+    linear-gradient(var(--color-border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-subtle) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.pattern-waves {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--color-primary-50) 0px,
+    var(--color-primary-50) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+/* ==================== SCROLLBAR STYLING ==================== */
+
+.scrollbar-nautical::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.scrollbar-nautical::-webkit-scrollbar-track {
+  background: var(--color-neutral-100);
+  border-radius: 5px;
+}
+
+.scrollbar-nautical::-webkit-scrollbar-thumb {
+  background: var(--color-primary-400);
+  border-radius: 5px;
+  transition: background 0.2s ease;
+}
+
+.scrollbar-nautical::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-500);
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+
+.backdrop-blur-nautical {
+  backdrop-filter: blur(8px);
+}
+
+.backdrop-blur-strong {
+  backdrop-filter: blur(16px);
+}
+
+.transition-nautical {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-fast {
+  transition: all 0.15s ease;
+}
+
+.transition-slow {
+  transition: all 0.5s ease;
+}
