@@ -1,0 +1,194 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_app/main.dart';
+import 'package:flutter_app/api_requests.dart';
+
+class AddProductPage extends StatefulWidget {
+  const AddProductPage({super.key});
+
+  @override
+  State<AddProductPage> createState() => AddProductPageState();
+}
+
+class AddProductPageState extends State<AddProductPage> {
+  static const categories = ["Laptops & Computers",
+      "Monitors & Displays",
+      "Computer Parts",
+      "Storage & Memory",
+      "Keyboards",
+      "Mice & Peripherals",
+      "Audio & Headphones",
+      "Phones & Tablets",
+      "Cameras & Webcams",
+      "Printers & Scanners",
+      "Networking",
+      "Cables * Accessories",
+      "Gaming Consoles",
+      "Streaming Equipment"];
+  static const conditions = ["New", "Used - Like New", 
+      "Used - Excellent", "Used - Fair","Used - Poor"];
+  final productTitle = TextEditingController();
+  final price = TextEditingController();
+  final location = TextEditingController();
+  final description = TextEditingController();
+  final imageURL = TextEditingController();
+  String? selectedCategory;
+  String? selectedCondition;
+
+  @override
+  void initState() {
+    super.initState();
+    productTitle.addListener(() {
+      setState(() {});
+    });
+    price.addListener(() {
+      setState(() {});
+    });
+    location.addListener(() {
+      setState(() {});
+    });
+    description.addListener(() {
+      setState(() {});
+    }); 
+    imageURL.addListener(() {
+      setState(() {});
+    }); 
+  }
+
+  void _addProductButton() async {
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('AddProduct'),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Product Title *',
+              ),
+              controller: productTitle,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: TextFormField(
+              keyboardType: TextInputType.number,
+              inputFormatters: [ FilteringTextInputFormatter.digitsOnly],
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Price *',
+              ),
+              controller: price,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Location *',
+              ),
+              controller: location,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: InputDecorator(
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Category *',
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: selectedCategory,
+                  hint: Text('Select Category'),
+                  isExpanded: true,
+                  items: categories.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedCategory = newValue;
+                    });
+                  },
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: InputDecorator(
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Condition *',
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: selectedCondition,
+                  hint: Text('Select Condition'),
+                  isExpanded: true,
+                  items: conditions.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedCondition = newValue;
+                    });
+                  },
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Description *',
+              ),
+              controller: description,
+            ),
+          ),
+          SizedBox(
+            width: 250,
+            child: Padding(
+              padding: EdgeInsetsGeometry.all(20),
+              child: FloatingActionButton(
+                onPressed: () => _addProductButton(),
+                child: const Text("List Product", style: TextStyle(fontSize: 24)),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: Text("No error text yet"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+
+    super.dispose();
+  }
+}
+

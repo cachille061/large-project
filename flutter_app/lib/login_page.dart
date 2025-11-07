@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/main.dart';
+import 'package:flutter_app/api_requests.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => MyCustomForm();
+  State<LoginPage> createState() => LoginPageState();
 }
 
-class MyCustomForm extends State<LoginPage> {
-  final usernameControl = TextEditingController();
+class LoginPageState extends State<LoginPage> {
+  final emailControl = TextEditingController();
   final passwordControl = TextEditingController();
-  final usernameTest = "test";
+  final emailTest = "test";
   final passwordTest = "1234";
   var errorText = "";
 
   @override
-  initState() {
+  void initState() {
     super.initState();
-    usernameControl.addListener(() {
+    emailControl.addListener(() {
       setState(() {});
     });
     passwordControl.addListener(() {
@@ -26,18 +27,16 @@ class MyCustomForm extends State<LoginPage> {
     });
   }
 
-  _login() {
-    final success =
-        (usernameControl.text == usernameTest &&
-        passwordControl.text == passwordTest);
-    if (success) {
+  _login() async {
+    final result = await signInWithEmail(emailControl.text, passwordControl.text);
+    if (result == "success") {
       Navigator.push(
         context,
         MaterialPageRoute<void>(builder: (BuildContext context) => HomePage()),
       );
     } else {
       setState(() {
-        errorText = "Invalid Username or Password!";
+        errorText = result;
       });
     }
   }
@@ -47,7 +46,7 @@ class MyCustomForm extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,9 +56,9 @@ class MyCustomForm extends State<LoginPage> {
             child: TextFormField(
               decoration: const InputDecoration(
                 border: UnderlineInputBorder(),
-                labelText: 'Enter your username',
+                labelText: 'Enter your email',
               ),
-              controller: usernameControl,
+              controller: emailControl,
             ),
           ),
           Padding(
@@ -94,7 +93,7 @@ class MyCustomForm extends State<LoginPage> {
   @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
-    usernameControl.dispose();
+    emailControl.dispose();
     passwordControl.dispose();
     super.dispose();
   }
