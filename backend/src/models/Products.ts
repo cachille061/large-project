@@ -84,4 +84,21 @@ productSchema.index({ sellerId: 1, status: 1 });
 
 const Product = mongoose.model<IProduct>('Product', productSchema);
 
+// Weighted text index for search functionality
+productSchema.index(
+    {
+        title: 'text',
+        description: 'text',
+        category: 'text',
+    },
+    {
+        weights: {
+            title: 10,
+            category: 5,
+            description: 1,
+        },
+        name: 'product_text_search',
+    }
+);
+
 export default Product;
