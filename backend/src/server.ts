@@ -17,7 +17,7 @@ const startServer = async () => {
             console.log(`Server is running on http://localhost:${PORT}`);
             console.log(`Health check available at http://localhost:${PORT}/health`);
             console.log('Registered models:', mongoose.modelNames());
-            console.log(`📦 Products endpoint: http://localhost:${PORT}/api/products`);
+            console.log(`Products endpoint: http://localhost:${PORT}/api/products`);
         });
     } catch (error) {
         console.error('Failed to start server:', error);
