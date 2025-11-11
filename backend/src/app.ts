@@ -6,7 +6,9 @@ import { auth } from "./middlewares/auth";
 import { requireAuth, optionalAuth } from "./middlewares/requireAuth";
 import { toNodeHandler } from "better-auth/node";
 import productRoutes from './routes/productRoutes';
+import searchRoutes from './routes/searchRoutes';
 import orderRoutes from "./routes/orderRoutes";
+
 
 export const app = express();
 
@@ -75,9 +77,19 @@ app.get("/api/public", optionalAuth, (req, res) => {
 });
 
 app.use('/api', productRoutes);
+app.use('/api', searchRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.use((_req, res) => {
     res.status(404).json({ error: "Route not found" });
 });
 
-app.use("/api/orders", orderRoutes);
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+      const status = err.status ?? 500;
+      const body: any = { error: err.message ?? 'Internal Server Error' };
+      if (process.env.NODE_ENV !== 'production') {
+            if (err.details) body.details = err.details;   // e.g., zod issues
+            body.stack = err.stack;
+          }
+      res.status(status).json(body);
+    });
