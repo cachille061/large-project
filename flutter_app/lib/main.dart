@@ -4,6 +4,7 @@ import 'package:flutter_app/sign_up_page.dart';
 import 'package:flutter_app/api_requests.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_app/add_product_page.dart';
+import 'package:flutter_better_auth/flutter_better_auth.dart';
 
 late String BACKEND_URL;
 
@@ -11,6 +12,7 @@ Future<void> main() async {
   await dotenv.load();
   BACKEND_URL = (dotenv.env['API_URL'] ?? '');
   if (BACKEND_URL == '') throw Error();
+  await ApiRequests().setup();
   runApp(MyApp());
 }
 
@@ -18,13 +20,14 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return BetterAuthProvider(child: MaterialApp(
       title: 'COP4331 Group 2',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
       ),
       home: const HomePage(),
+    )
     );
   }
 }
@@ -38,6 +41,7 @@ class HomePage extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Row(
           children: [
             Padding(
@@ -79,7 +83,7 @@ class _ProductsListState extends State<ProductsList> {
   void getProducts() async {
     try {
       loading = true;
-      products = await getAllProducts();
+      products = await ApiRequests().getAllProducts();
       setState(() {});
       loading = false;
     } catch (error) {
@@ -177,7 +181,7 @@ class _AccountMenuState extends State<AccountMenu> {
   @override
   void initState() {
     super.initState();
-    hasSessionToken = apiRequestsHasToken;
+    hasSessionToken = ApiRequests.loggedIn;
   }
 
   void _loginButton(BuildContext context) {
@@ -199,8 +203,8 @@ class _AccountMenuState extends State<AccountMenu> {
   }
 
   void _logoutButton(BuildContext context) async {
-    await signOut();
-    hasSessionToken = apiRequestsHasToken;
+    await ApiRequests().signOut();
+    hasSessionToken = ApiRequests.loggedIn;
     setState(() {});
     return;
   }
@@ -249,7 +253,7 @@ class _NavBarState extends State<NavBar> {
   @override
   void initState() {
     super.initState();
-    hasSessionToken = apiRequestsHasToken;
+    hasSessionToken = ApiRequests.loggedIn;
   }
 
  _searchButton(BuildContext context) {
@@ -265,10 +269,17 @@ class _NavBarState extends State<NavBar> {
     );
   }
 
-  void _addProductButton(BuildContext context) async {
+  void _addProductButton(BuildContext context) {
     Navigator.push(
       context, 
       MaterialPageRoute<void>(builder: (BuildContext context) => AddProductPage())
+    );
+  }
+
+  void _homeButton(BuildContext context) {
+    Navigator.push(
+      context, 
+      MaterialPageRoute<void>(builder: (BuildContext context) => HomePage())
     );
   }
 

@@ -28,7 +28,7 @@ class SignUpPageState extends State<SignUpPage> {
   }
 
   _login() async {
-    final result = await signUpWithEmail(emailControl.text, passwordControl.text);
+    final result = await ApiRequests().signUpWithEmail(emailControl.text, passwordControl.text);
     if (result == "success") {
       Navigator.push(
         context,

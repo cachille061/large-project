@@ -11,22 +11,29 @@ class AddProductPage extends StatefulWidget {
 }
 
 class AddProductPageState extends State<AddProductPage> {
-  static const categories = ["Laptops & Computers",
-      "Monitors & Displays",
-      "Computer Parts",
-      "Storage & Memory",
-      "Keyboards",
-      "Mice & Peripherals",
-      "Audio & Headphones",
-      "Phones & Tablets",
-      "Cameras & Webcams",
-      "Printers & Scanners",
-      "Networking",
-      "Cables * Accessories",
-      "Gaming Consoles",
-      "Streaming Equipment"];
-  static const conditions = ["New", "Used - Like New", 
-      "Used - Excellent", "Used - Fair","Used - Poor"];
+  static const categories = [
+    "Laptops & Computers",
+    "Monitors & Displays",
+    "Computer Parts",
+    "Storage & Memory",
+    "Keyboards",
+    "Mice & Peripherals",
+    "Audio & Headphones",
+    "Phones & Tablets",
+    "Cameras & Webcams",
+    "Printers & Scanners",
+    "Networking",
+    "Cables * Accessories",
+    "Gaming Consoles",
+    "Streaming Equipment",
+  ];
+  static const conditions = [
+    "New",
+    "Used - Like New",
+    "Used - Excellent",
+    "Used - Fair",
+    "Used - Poor",
+  ];
   final productTitle = TextEditingController();
   final price = TextEditingController();
   final location = TextEditingController();
@@ -34,6 +41,7 @@ class AddProductPageState extends State<AddProductPage> {
   final imageURL = TextEditingController();
   String? selectedCategory;
   String? selectedCondition;
+  String errorText = "";
 
   @override
   void initState() {
@@ -49,13 +57,29 @@ class AddProductPageState extends State<AddProductPage> {
     });
     description.addListener(() {
       setState(() {});
-    }); 
+    });
     imageURL.addListener(() {
       setState(() {});
-    }); 
+    });
   }
 
   void _addProductButton() async {
+    if (productTitle.text == ''
+      || price.text == ''
+      || description.text == ''
+      || selectedCategory == null
+      || selectedCondition == null
+      ) {
+      errorText = "Not all required fields are filled out!";
+      return;
+    }
+    await ApiRequests().addProduct(
+      title: productTitle.text,
+      price: double.parse(price.text),
+      description: description.text,
+      condition: selectedCondition ?? '',
+      category: selectedCategory ?? '',
+    );
     Navigator.pop(context);
   }
 
@@ -83,7 +107,7 @@ class AddProductPageState extends State<AddProductPage> {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
             child: TextFormField(
               keyboardType: TextInputType.number,
-              inputFormatters: [ FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: const InputDecoration(
                 border: UnderlineInputBorder(),
                 labelText: 'Price *',
@@ -171,13 +195,16 @@ class AddProductPageState extends State<AddProductPage> {
               padding: EdgeInsetsGeometry.all(20),
               child: FloatingActionButton(
                 onPressed: () => _addProductButton(),
-                child: const Text("List Product", style: TextStyle(fontSize: 24)),
+                child: const Text(
+                  "List Product",
+                  style: TextStyle(fontSize: 24),
+                ),
               ),
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-            child: Text("No error text yet"),
+            child: Text(errorText),
           ),
         ],
       ),
@@ -187,8 +214,11 @@ class AddProductPageState extends State<AddProductPage> {
   @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
-
+    productTitle.dispose();
+    price.dispose();
+    description.dispose();
+    location.dispose();
+    imageURL.dispose();
     super.dispose();
   }
 }
-

@@ -28,7 +28,7 @@ class LoginPageState extends State<LoginPage> {
   }
 
   _login() async {
-    final result = await signInWithEmail(emailControl.text, passwordControl.text);
+    final result = await ApiRequests().signInWithEmail(emailControl.text, passwordControl.text);
     if (result == "success") {
       Navigator.push(
         context,
