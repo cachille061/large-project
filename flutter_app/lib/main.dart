@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
 import 'package:flutter_app/login_page.dart';
 import 'package:flutter_app/sign_up_page.dart';
 import 'package:flutter_app/api_requests.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_app/add_product_page.dart';
-import 'dart:developer';
-import 'package:flutter/foundation.dart';
 
 late String BACKEND_URL;
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
-bool searching = false;
-const categories = [
-  "Laptops & Computers",
-  "Monitors & Displays",
+// This function can be changed to something else by the search menu
+Future<List> Function() searchFunc = () async {
+  return await ApiRequests().getAllProducts();
+};
+const CATEGORIES = [
   "Computer Parts",
   "Storage & Memory",
   "Keyboards",
@@ -27,7 +26,20 @@ const categories = [
   "Gaming Consoles",
   "Streaming Equipment",
 ];
-
+const DISPLAY_CONDITIONS = [
+  "New",
+  "Used - Like New",
+  "Used - Excellent",
+  "Used - Fair",
+  "Used - Poor",
+];
+const Map<String, String> DISPLAY_TO_VALID_CONDITION = {
+  "New": 'new',
+  "Used - Like New": 'like-new',
+  "Used - Excellent": 'good',
+  "Used - Fair": 'fair',
+  "Used - Poor": 'poor',
+};
 Future<void> main() async {
   await dotenv.load();
   BACKEND_URL = (dotenv.env['API_URL'] ?? '');
@@ -65,6 +77,8 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
+  final GlobalKey<_ProductsListState> _productsListKey = GlobalKey();
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -90,10 +104,12 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [ProductsList()],
+          children: [ProductsList(key: _productsListKey)],
         ),
       ),
-      bottomNavigationBar: NavBar(),
+      bottomNavigationBar: NavBar(
+        onExitSearch: () => _productsListKey.currentState?.getProducts(),
+      ),
     );
   }
 }
@@ -117,12 +133,7 @@ class _ProductsListState extends State<ProductsList> with RouteAware {
     });
 
     try {
-      var fetchedProducts;
-      if (!searching) {
-        fetchedProducts = await ApiRequests().getAllProducts();
-      } else {
-        fetchedProducts = await ApiRequests().searchProducts();
-      }
+      final fetchedProducts = await searchFunc();
       setState(() {
         products = fetchedProducts;
         loading = false;
@@ -170,9 +181,66 @@ class _ProductsListState extends State<ProductsList> with RouteAware {
     } else if (products.isEmpty) {
       return Text("No Products to show!");
     }
-    return Column(
-      children: [for (var product in products) Text(product["title"])],
+
+    return Expanded(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(8),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (var product in products)
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.teal.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product["title"] ?? "No title",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      product["description"] ?? "No description",
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "Location: ${product["location"] ?? "Unknown"}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "Price: \$${product["price"] ?? 0}",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
+    ;
   }
 }
 
@@ -184,14 +252,77 @@ class SearchMenu extends StatefulWidget {
 }
 
 class _SearchMenuState extends State<SearchMenu> {
-  final searchTextCtrl = TextEditingController();
-  final List<String> selectedCategories = [];
+  static final List<String> selectedCategories = [];
+  static final List<String> selectedConditions = [];
+  static String savedSearch = "";
+  static String savedMin = "";
+  static String savedMax = "";
+  static String savedLocation = "";
+  final searchText = TextEditingController();
+  final minPrice = TextEditingController();
+  final maxPrice = TextEditingController();
+  final location = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    searchTextCtrl.addListener(() {
-      setState(() {});
+    if (savedSearch != "") searchText.text = savedSearch;
+    searchText.addListener(() {
+      savedSearch = searchText.text;
+      setSearchFunc();
+    });
+    if (savedMin != "") minPrice.text = savedMin;
+    minPrice.addListener(() {
+      savedMin = minPrice.text;
+      setSearchFunc();
+    });
+    if (savedMax != "") maxPrice.text = savedMax;
+    maxPrice.addListener(() {
+      savedMax = maxPrice.text;
+      setSearchFunc();
+    });
+    if (savedLocation != "") location.text = savedLocation;
+    location.addListener(() {
+      savedLocation = location.text;
+      setSearchFunc();
+    });
+  }
+
+  void setSearchFunc() {
+    if (searchText.text.isEmpty &&
+        selectedCategories.isEmpty &&
+        selectedConditions.isEmpty &&
+        minPrice.text.isEmpty &&
+        maxPrice.text.isEmpty &&
+        location.text.isEmpty) {
+      searchFunc = () async {
+        return await ApiRequests().getAllProducts();
+      };
+    } else {
+      searchFunc = () async {
+        return await ApiRequests().searchProducts(
+          query: searchText.text.isEmpty ? null : searchText.text,
+          category: selectedCategories.isEmpty ? null : selectedCategories[0],
+          condition: selectedConditions.isEmpty ? null : selectedConditions[0],
+          minPrice: minPrice.text.isEmpty ? null : double.parse(minPrice.text),
+          maxPrice: maxPrice.text.isEmpty ? null : double.parse(maxPrice.text),
+        );
+      };
+    }
+  }
+
+  void clearFilters() {
+    searchText.clear();
+    minPrice.clear();
+    maxPrice.clear();
+    location.clear();
+    setState(() {
+      savedSearch = "";
+      savedMin = "";
+      savedMax = "";
+      savedLocation = "";
+      selectedConditions.clear();
+      selectedCategories.clear();
     });
   }
 
@@ -202,13 +333,39 @@ class _SearchMenuState extends State<SearchMenu> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          TextButton(child: Text("Reset Filters"), onPressed: clearFilters),
           TextField(
-            controller: searchTextCtrl,
+            controller: searchText,
             decoration: InputDecoration(
               labelText: 'Search products',
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.search),
             ),
+          ),
+          TextFormField(
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              labelText: 'Location',
+            ),
+            controller: location,
+          ),
+          TextFormField(
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              labelText: 'Minimum Price',
+            ),
+            controller: minPrice,
+          ),
+          TextFormField(
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              labelText: 'Maximum Price',
+            ),
+            controller: maxPrice,
           ),
           const SizedBox(height: 16),
           Align(alignment: Alignment.centerLeft, child: Text('Categories')),
@@ -216,7 +373,7 @@ class _SearchMenuState extends State<SearchMenu> {
           Wrap(
             spacing: 8,
             children: [
-              for (var category in categories)
+              for (var category in CATEGORIES)
                 ChoiceChip(
                   label: Text(category),
                   selected: selectedCategories.contains(category),
@@ -235,6 +392,16 @@ class _SearchMenuState extends State<SearchMenu> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    // Remove listeners but DO NOT dispose static controllers
+    searchText.dispose();
+    minPrice.dispose();
+    maxPrice.dispose();
+    location.dispose();
+    super.dispose();
   }
 }
 
@@ -305,7 +472,8 @@ class _AccountMenuState extends State<AccountMenu> {
 }
 
 class NavBar extends StatefulWidget {
-  const NavBar({super.key});
+  final Function onExitSearch;
+  const NavBar({super.key, required this.onExitSearch});
 
   @override
   State<NavBar> createState() => _NavBarState();
@@ -317,8 +485,8 @@ class _NavBarState extends State<NavBar> {
     super.initState();
   }
 
-  _searchButton(BuildContext context) {
-    showModalBottomSheet(
+  _searchButton(BuildContext context) async {
+    await showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
         return const SearchMenu();
@@ -328,6 +496,7 @@ class _NavBarState extends State<NavBar> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
     );
+    widget.onExitSearch();
   }
 
   void _addProductButton(BuildContext context) {

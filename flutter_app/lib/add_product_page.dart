@@ -11,20 +11,6 @@ class AddProductPage extends StatefulWidget {
 }
 
 class AddProductPageState extends State<AddProductPage> {
-  static const displayConditions = [
-    "New",
-    "Used - Like New",
-    "Used - Excellent",
-    "Used - Fair",
-    "Used - Poor",
-  ];
-  static const Map<String, String> validConditions = {
-    "New": 'new',
-    "Used - Like New": 'like-new',
-    "Used - Excellent": 'good',
-    "Used - Fair": 'fair',
-    "Used - Poor": 'poor',
-  };
   final productTitle = TextEditingController();
   final price = TextEditingController();
   final location = TextEditingController();
@@ -85,7 +71,7 @@ class AddProductPageState extends State<AddProductPage> {
       title: productTitle.text,
       price: double.parse(price.text),
       description: description.text,
-      condition: validConditions[selectedCondition] ?? '',
+      condition: DISPLAY_TO_VALID_CONDITION[selectedCondition] ?? '',
       category: selectedCategory ?? '',
       location: location.text,
     );
@@ -147,7 +133,7 @@ class AddProductPageState extends State<AddProductPage> {
                   value: selectedCategory,
                   hint: Text('Select Category'),
                   isExpanded: true,
-                  items: categories.map((String value) {
+                  items: CATEGORIES.map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -174,7 +160,7 @@ class AddProductPageState extends State<AddProductPage> {
                   value: selectedCondition,
                   hint: Text('Select Condition'),
                   isExpanded: true,
-                  items: displayConditions.map((String value) {
+                  items: DISPLAY_CONDITIONS.map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),

@@ -29,9 +29,10 @@ class ApiRequests {
     return [];
   }
 
-  Future<(bool, String)> searchProducts({
+  Future<List> searchProducts({
     String? query,
     String? category,
+    String? condition,
     double? minPrice,
     double? maxPrice,
     String? sortBy,
@@ -57,25 +58,21 @@ class ApiRequests {
 
     final sessionToken = await storage.read(key: tokenKey);
 
-    try {
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cookie': 'better-auth.session_token=$sessionToken',
-        },
-      );
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'better-auth.session_token=$sessionToken',
+      },
+    );
 
-      if (response.statusCode == 200) {
-        return (true, "Products fetched successfully: ${response.body}");
-      } else {
-        return (
-          false,
-          "Failed to fetch products: ${response.body}\nheaders: ${response.request?.headers}\nrequest URL: $uri",
-        );
-      }
-    } catch (error) {
-      return (false, "Error fetching products: $error");
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      debugPrint('Success: $data');
+      return data["results"];
+    } else {
+      debugPrint('Error: ${response.statusCode}');
+      return [];
     }
   }
 
