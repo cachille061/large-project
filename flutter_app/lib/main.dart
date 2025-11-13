@@ -1,12 +1,32 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:flutter_app/login_page.dart';
 import 'package:flutter_app/sign_up_page.dart';
 import 'package:flutter_app/api_requests.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_app/add_product_page.dart';
-import 'package:flutter_better_auth/flutter_better_auth.dart';
+import 'dart:developer';
+import 'package:flutter/foundation.dart';
 
 late String BACKEND_URL;
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+bool searching = false;
+const categories = [
+  "Laptops & Computers",
+  "Monitors & Displays",
+  "Computer Parts",
+  "Storage & Memory",
+  "Keyboards",
+  "Mice & Peripherals",
+  "Audio & Headphones",
+  "Phones & Tablets",
+  "Cameras & Webcams",
+  "Printers & Scanners",
+  "Networking",
+  "Cables * Accessories",
+  "Gaming Consoles",
+  "Streaming Equipment",
+];
 
 Future<void> main() async {
   await dotenv.load();
@@ -18,22 +38,32 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return BetterAuthProvider(child: MaterialApp(
+    return MaterialApp(
       title: 'COP4331 Group 2',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
       ),
       home: const HomePage(),
-    )
+      navigatorObservers: [routeObserver],
     );
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  void reloadState() {
+    setState(() {});
+  }
 
   // This widget is the root of your application.
   @override
@@ -52,7 +82,7 @@ class HomePage extends StatelessWidget {
               ),
             ),
             Spacer(),
-            AccountMenu(),
+            AccountMenu(onLogout: () => reloadState()),
           ],
         ),
         backgroundColor: colors.primaryContainer,
@@ -63,7 +93,7 @@ class HomePage extends StatelessWidget {
           children: [ProductsList()],
         ),
       ),
-      bottomNavigationBar: NavBar()
+      bottomNavigationBar: NavBar(),
     );
   }
 }
@@ -75,27 +105,59 @@ class ProductsList extends StatefulWidget {
   State<ProductsList> createState() => _ProductsListState();
 }
 
-class _ProductsListState extends State<ProductsList> {
+class _ProductsListState extends State<ProductsList> with RouteAware {
   List<dynamic> products = [];
   bool loading = false;
   bool loadingError = false;
 
   void getProducts() async {
-    try {
+    setState(() {
       loading = true;
-      products = await ApiRequests().getAllProducts();
-      setState(() {});
-      loading = false;
+      loadingError = false;
+    });
+
+    try {
+      var fetchedProducts;
+      if (!searching) {
+        fetchedProducts = await ApiRequests().getAllProducts();
+      } else {
+        fetchedProducts = await ApiRequests().searchProducts();
+      }
+      setState(() {
+        products = fetchedProducts;
+        loading = false;
+      });
     } catch (error) {
-      setState(() {});
-      loadingError = true;
-      loading = false;
+      setState(() {
+        loadingError = true;
+        loading = false;
+      });
     }
   }
 
   @override
   initState() {
     super.initState();
+    debugPrint("Initializing state");
+    getProducts();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to RouteObserver
+    routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when returning to this page
     getProducts();
   }
 
@@ -108,7 +170,9 @@ class _ProductsListState extends State<ProductsList> {
     } else if (products.isEmpty) {
       return Text("No Products to show!");
     }
-    return Column(children: [for (var product in products) Text(product)]);
+    return Column(
+      children: [for (var product in products) Text(product["title"])],
+    );
   }
 }
 
@@ -121,6 +185,7 @@ class SearchMenu extends StatefulWidget {
 
 class _SearchMenuState extends State<SearchMenu> {
   final searchTextCtrl = TextEditingController();
+  final List<String> selectedCategories = [];
 
   @override
   void initState() {
@@ -151,15 +216,20 @@ class _SearchMenuState extends State<SearchMenu> {
           Wrap(
             spacing: 8,
             children: [
-              Chip(label: Text('Laptops')),
-              Chip(label: Text('Keyboards')),
-              Chip(label: Text('Mice')),
-              Chip(label: Text('Monitors')),
-              Chip(label: Text('Headphones')),
-              Chip(label: Text('Storage')),
-              Chip(label: Text('CPUs')),
-              Chip(label: Text('Motherboards')),
-              Chip(label: Text('Accessories')),
+              for (var category in categories)
+                ChoiceChip(
+                  label: Text(category),
+                  selected: selectedCategories.contains(category),
+                  onSelected: (isSelected) {
+                    setState(() {
+                      if (isSelected) {
+                        selectedCategories.add(category);
+                      } else {
+                        selectedCategories.remove(category);
+                      }
+                    });
+                  },
+                ),
             ],
           ),
         ],
@@ -169,21 +239,14 @@ class _SearchMenuState extends State<SearchMenu> {
 }
 
 class AccountMenu extends StatefulWidget {
-  const AccountMenu({super.key});
+  final Function onLogout;
+  const AccountMenu({super.key, required this.onLogout});
 
   @override
   State<AccountMenu> createState() => _AccountMenuState();
 }
 
 class _AccountMenuState extends State<AccountMenu> {
-  var hasSessionToken;
-
-  @override
-  void initState() {
-    super.initState();
-    hasSessionToken = ApiRequests.loggedIn;
-  }
-
   void _loginButton(BuildContext context) {
     Navigator.push(
       context,
@@ -204,8 +267,9 @@ class _AccountMenuState extends State<AccountMenu> {
 
   void _logoutButton(BuildContext context) async {
     await ApiRequests().signOut();
-    hasSessionToken = ApiRequests.loggedIn;
-    setState(() {});
+    setState(() {
+      widget.onLogout();
+    });
     return;
   }
 
@@ -214,7 +278,7 @@ class _AccountMenuState extends State<AccountMenu> {
     return PopupMenuButton<int>(
       icon: Icon(Icons.more_vert),
       onSelected: (int result) {
-        if (!hasSessionToken) {
+        if (!ApiRequests.loggedIn) {
           if (result == 1) {
             _loginButton(context);
           } else if (result == 2) {
@@ -227,7 +291,7 @@ class _AccountMenuState extends State<AccountMenu> {
         }
       },
       itemBuilder: (BuildContext context) {
-        if (!hasSessionToken) {
+        if (!ApiRequests.loggedIn) {
           return [
             PopupMenuItem<int>(value: 1, child: Text('Login')),
             PopupMenuItem<int>(value: 2, child: Text('Sign Up')),
@@ -248,15 +312,12 @@ class NavBar extends StatefulWidget {
 }
 
 class _NavBarState extends State<NavBar> {
-  bool hasSessionToken = false;
-
   @override
   void initState() {
     super.initState();
-    hasSessionToken = ApiRequests.loggedIn;
   }
 
- _searchButton(BuildContext context) {
+  _searchButton(BuildContext context) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -271,15 +332,17 @@ class _NavBarState extends State<NavBar> {
 
   void _addProductButton(BuildContext context) {
     Navigator.push(
-      context, 
-      MaterialPageRoute<void>(builder: (BuildContext context) => AddProductPage())
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => AddProductPage(),
+      ),
     );
   }
 
   void _homeButton(BuildContext context) {
     Navigator.push(
-      context, 
-      MaterialPageRoute<void>(builder: (BuildContext context) => HomePage())
+      context,
+      MaterialPageRoute<void>(builder: (BuildContext context) => HomePage()),
     );
   }
 
@@ -306,13 +369,14 @@ class _NavBarState extends State<NavBar> {
             IconButton(
               icon: Icon(Icons.home),
               color: colors.onPrimaryContainer,
-              onPressed: () {},
+              onPressed: () => _homeButton(context),
             ),
-            if (hasSessionToken) IconButton(
-              icon: Icon(Icons.add),
-              color: colors.onPrimaryContainer,
-              onPressed: () => _addProductButton(context),
-            ),
+            if (ApiRequests.loggedIn)
+              IconButton(
+                icon: Icon(Icons.add),
+                color: colors.onPrimaryContainer,
+                onPressed: () => _addProductButton(context),
+              ),
             IconButton(
               icon: Icon(Icons.history),
               color: colors.onPrimaryContainer,

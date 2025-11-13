@@ -11,29 +11,20 @@ class AddProductPage extends StatefulWidget {
 }
 
 class AddProductPageState extends State<AddProductPage> {
-  static const categories = [
-    "Laptops & Computers",
-    "Monitors & Displays",
-    "Computer Parts",
-    "Storage & Memory",
-    "Keyboards",
-    "Mice & Peripherals",
-    "Audio & Headphones",
-    "Phones & Tablets",
-    "Cameras & Webcams",
-    "Printers & Scanners",
-    "Networking",
-    "Cables * Accessories",
-    "Gaming Consoles",
-    "Streaming Equipment",
-  ];
-  static const conditions = [
+  static const displayConditions = [
     "New",
     "Used - Like New",
     "Used - Excellent",
     "Used - Fair",
     "Used - Poor",
   ];
+  static const Map<String, String> validConditions = {
+    "New": 'new',
+    "Used - Like New": 'like-new',
+    "Used - Excellent": 'good',
+    "Used - Fair": 'fair',
+    "Used - Poor": 'poor',
+  };
   final productTitle = TextEditingController();
   final price = TextEditingController();
   final location = TextEditingController();
@@ -64,23 +55,42 @@ class AddProductPageState extends State<AddProductPage> {
   }
 
   void _addProductButton() async {
-    if (productTitle.text == ''
-      || price.text == ''
-      || description.text == ''
-      || selectedCategory == null
-      || selectedCondition == null
-      ) {
+    if (productTitle.text == '' ||
+        price.text == '' ||
+        description.text == '' ||
+        selectedCategory == null ||
+        selectedCondition == null) {
       errorText = "Not all required fields are filled out!";
       return;
     }
-    await ApiRequests().addProduct(
+    if (productTitle.text.length < 3 || productTitle.text.length > 100) {
+      errorText = "Title must be between 3 and 100 characters";
+      return;
+    }
+    if (description.text.length < 10 || description.text.length > 2000) {
+      errorText = "Description must be between 10 and 2000 characters";
+      return;
+    }
+    // Price must be a valid number and >= 0
+    final priceValue = double.tryParse(price.text);
+    if (priceValue == null) {
+      errorText = "Price must be a valid number";
+      return;
+    }
+    if (priceValue < 0) {
+      errorText = "Price cannot be negative";
+      return;
+    }
+    final result = await ApiRequests().addProduct(
       title: productTitle.text,
       price: double.parse(price.text),
       description: description.text,
-      condition: selectedCondition ?? '',
+      condition: validConditions[selectedCondition] ?? '',
       category: selectedCategory ?? '',
+      location: location.text,
     );
-    Navigator.pop(context);
+    debugPrint(result.$2);
+    if (result.$1 == true) Navigator.pop(context);
   }
 
   @override
@@ -164,7 +174,7 @@ class AddProductPageState extends State<AddProductPage> {
                   value: selectedCondition,
                   hint: Text('Select Condition'),
                   isExpanded: true,
-                  items: conditions.map((String value) {
+                  items: displayConditions.map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),

@@ -1,14 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_app/main.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_better_auth/flutter_better_auth.dart';
 
 class ApiRequests {
+  static FlutterSecureStorage storage = FlutterSecureStorage();
+  static const tokenKey = "session_token";
   static bool loggedIn = false;
   Future<void> setup() async {
-    await FlutterBetterAuth.initialize(url: BACKEND_URL);
+    if (await storage.containsKey(key: tokenKey)) {
+      loggedIn = true;
+    }
   }
 
   Future<List<dynamic>> getAllProducts() async {
@@ -18,57 +21,117 @@ class ApiRequests {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      print('Success: $data');    
+      debugPrint('Success: $data');
+      return data["products"];
     } else {
-      print('Error: ${response.statusCode}');
+      debugPrint('Error: ${response.statusCode}');
     }
     return [];
   }
 
-  Future<List<dynamic>> searchProducts() async {
+  Future<(bool, String)> searchProducts({
+    String? query,
+    String? category,
+    double? minPrice,
+    double? maxPrice,
+    String? sortBy,
+    int? page,
+    int? limit,
+  }) async {
     final apiUrl = BACKEND_URL;
-    final url = Uri.parse('${apiUrl ?? ''}/api/products');
-    final response = await http.get(url);
+    final baseUrl = '$apiUrl/api/search';
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      print('Success: $data');
-    } else {
-      print('Error: ${response.statusCode}');
+    // Build query parameters dynamically (skip nulls)
+    final queryParams = <String, String>{};
+
+    if (query != null && query.isNotEmpty) queryParams['q'] = query;
+    if (category != null && category.isNotEmpty)
+      queryParams['category'] = category;
+    if (minPrice != null) queryParams['minPrice'] = minPrice.toString();
+    if (maxPrice != null) queryParams['maxPrice'] = maxPrice.toString();
+    if (sortBy != null && sortBy.isNotEmpty) queryParams['sortBy'] = sortBy;
+    if (page != null) queryParams['page'] = page.toString();
+    if (limit != null) queryParams['limit'] = limit.toString();
+
+    final uri = Uri.parse(baseUrl).replace(queryParameters: queryParams);
+
+    final sessionToken = await storage.read(key: tokenKey);
+
+    try {
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': 'better-auth.session_token=$sessionToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return (true, "Products fetched successfully: ${response.body}");
+      } else {
+        return (
+          false,
+          "Failed to fetch products: ${response.body}\nheaders: ${response.request?.headers}\nrequest URL: $uri",
+        );
+      }
+    } catch (error) {
+      return (false, "Error fetching products: $error");
     }
-    return [];
   }
 
   Future<String> signUpWithEmail(String email, String password) async {
-    final client = FlutterBetterAuth.client;
-    final result = await client.signUp.email(name: email, email: email, password: password);
-    if (result.error != null) {
+    final apiUrl = BACKEND_URL;
+    final url = Uri.parse('${apiUrl ?? ''}/api/auth/sign-up/email');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      // Single instance of secure storage
+      final storage = FlutterSecureStorage();
+      final setCookie = response.headers['set-cookie'];
+      final token = setCookie?.split('=')[1].split(';')[0];
+      await storage.write(key: tokenKey, value: token);
+      loggedIn = true;
       return "success";
+    } else if (jsonDecode(response.body)['message'] != null) {
+      return jsonDecode(response.body)['message'];
+    } else if (response.statusCode == 404) {
+      return "API not found!";
+    } else {
+      return "Error!";
     }
-    return (result.error?.stack ?? '');
   }
 
   Future<String> signInWithEmail(String email, String password) async {
-    final client = FlutterBetterAuth.client;
-    final result = await client.signIn.email(email: email, password: password);
-    if (result.error != null) {
+    final apiUrl = BACKEND_URL;
+    final url = Uri.parse('${apiUrl ?? ''}/api/auth/sign-in/email');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      // Single instance of secure storage
+      final storage = FlutterSecureStorage();
+      final setCookie = response.headers['set-cookie'];
+      final token = setCookie?.split('=')[1].split(';')[0];
+      await storage.write(key: tokenKey, value: token);
+      loggedIn = true;
       return "success";
+    } else if (jsonDecode(response.body)['message'] != null) {
+      return jsonDecode(response.body)['message'];
+    } else if (response.statusCode == 404) {
+      return "API not found!";
+    } else {
+      return response.body;
     }
-    return (result.error?.stack ?? '');
   }
 
   Future<void> signOut() async {
-    final storage = FlutterSecureStorage();
-    await storage.delete(key: "session_token"); // Handle response as needed
+    await storage.delete(key: tokenKey);
     loggedIn = false;
-  }
-
-  // Might not be necessary...
-  Future<void> getSession() async {
-    final apiUrl = BACKEND_URL;
-    final url = Uri.parse('${apiUrl ?? ''}/api/auth/session');
-    final response = await http.get(url);
-    // Handle response as needed
   }
 
   Future<void> initiateGoogleOAuth() async {
@@ -80,7 +143,9 @@ class ApiRequests {
 
   Future<void> googleOAuthCallback(String code) async {
     final apiUrl = BACKEND_URL;
-    final url = Uri.parse('${apiUrl ?? ''}/api/auth/google/callback?code=$code');
+    final url = Uri.parse(
+      '${apiUrl ?? ''}/api/auth/google/callback?code=$code',
+    );
     final response = await http.get(url);
     // Handle response as needed
   }
@@ -94,51 +159,50 @@ class ApiRequests {
 
   Future<void> githubOAuthCallback(String code) async {
     final apiUrl = BACKEND_URL;
-    final url = Uri.parse('${apiUrl ?? ''}/api/auth/github/callback?code=$code');
+    final url = Uri.parse(
+      '${apiUrl ?? ''}/api/auth/github/callback?code=$code',
+    );
     final response = await http.get(url);
     // Handle response as needed
   }
 
-  Future<String> addProduct({
+  Future<(bool, String)> addProduct({
     required String title,
     required double price,
     required String description,
     required String category,
     required String condition,
+    required String location,
     String? imageUrl,
   }) async {
     final apiUrl = BACKEND_URL;
     final url = Uri.parse('$apiUrl/api/products');
-    final storage = FlutterSecureStorage();
-    final token = await storage.read(key: "session_token");
-    if (token == null) {
-      throw ErrorDescription("You shouldn't be adding product if your key is null!");
-    }
-
     final body = {
       'title': title,
-      'price': price,
       'description': description,
-      'category': category,
+      'price': price,
       'condition': condition,
-      if (imageUrl != null) 'imageUrl': imageUrl,
+      'category': category,
+      'location': location,
     };
+
+    final sessionToken = await storage.read(key: tokenKey);
 
     final response = await http.post(
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-        'Cookie': 'session=$token',
-
+        'Cookie': 'better-auth.session_token=$sessionToken',
       },
       body: jsonEncode(body),
     );
-
     if (response.statusCode == 201) {
-      return "Product added successfully";
+      return (true, "Product added successfully: ${response.body}");
     } else {
-      return "Failed to add product: ${response.body}";
+      return (
+        false,
+        "Failed to add product: ${response.body}\nheaders: ${response.request?.headers}\nrequest body $body\n",
+      );
     }
   }
 }
