@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import mongoose from "mongoose";
 import Order from "../models/Order";
 import Product from "../models/Products";
+import Wallet from "../models/Wallet";
+
 
 const computeSubtotal = (items: { price: number; qty: number }[]) =>
   items.reduce((s, i) => s + i.price * i.qty, 0);
@@ -80,35 +82,57 @@ export const checkoutOrder = async (req: Request, res: Response) => {
   const uid = req.user?.id;
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
 
+  // method can be "balance" or "mock" (default)
+  const method = (req.query.method as string) || (req.body?.method as string) || "mock";
+
   const session = await mongoose.startSession();
   let final: any = null;
 
-  await session.withTransaction(async () => {
-    const order = await Order.findOne({ _id: req.params.orderId, user: uid, status: "CURRENT" }).session(session);
-    if (!order) throw new Error("Order not found");
+  try {
+    await session.withTransaction(async () => {
+      const order = await Order.findOne({ _id: req.params.orderId, user: uid, status: "CURRENT" }).session(session);
+      if (!order) throw new Error("Order not found");
 
-    // single-unit: each product must still be available → mark as sold
-    for (const it of order.items) {
-      const p: any = await Product.findById(it.product).session(session);
-      if (!p) throw new Error("Product missing");
-      if (p.status !== "available") throw new Error("Item already sold");
-      p.status = "sold";
-      await p.save({ session });
-    }
+      // single-unit: verify availability and mark products sold
+      for (const it of order.items) {
+        const p: any = await Product.findById(it.product).session(session);
+        if (!p) throw new Error("Product missing");
+        if (p.status !== "available") throw new Error("Item already sold");
+        p.status = "sold";
+        await p.save({ session });
+      }
 
-    // mock payment success
-    order.paymentStatus = "PAID";
-    order.status = "FULFILLED";
-    await order.save({ session });
+      if (method === "balance") {
+        // withdraw from wallet
+        const wallet = await Wallet.findOne({ user: uid }).session(session);
+        if (!wallet || wallet.balance < order.subtotal) {
+          throw new Error("Insufficient balance");
+        }
+        wallet.balance -= order.subtotal;
+        await wallet.save({ session });
 
-    final = order;
-  });
+        order.paymentStatus = "PAID";
+        order.status = "FULFILLED";
+        await order.save({ session });
+      } else {
+        // mock payment - assume success for now
+        order.paymentStatus = "PAID";
+        order.status = "FULFILLED";
+        await order.save({ session });
+      }
+
+      final = order;
+    });
+  } catch (err: any) {
+    await session.endSession();
+    console.error("Checkout error:", err?.message || err);
+    return res.status(409).json({ error: err?.message || "Checkout failed" });
+  }
 
   session.endSession();
-
-  if (!final) return res.status(409).json({ error: "Checkout failed" });
   res.json(final);
 };
+
 
 // GET /api/orders/previous
 export const getPreviousOrders = async (req: Request, res: Response) => {
