@@ -1,6 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 
+export const PRODUCT_CATEGORIES = [
+    'Laptops & Computers',
+    'Phones & Tablets',
+    'Audio & Headphones',
+    'Cameras & Photography',
+    'Gaming Consoles & Accessories',
+    'Monitors & Displays',
+    'Computer Components',
+    'Networking Equipment',
+    'Wearables & Smart Devices',
+    'Storage & Memory',
+    'Keyboards & Mice',
+    'Printers & Scanners',
+    'Smart Home Devices',
+    'Drones & RC',
+    'VR & AR Headsets',
+    'Software & Licenses',
+    'Cables & Accessories',
+    'Other Tech',
+] as const;
+
 const createProductSchema = z.object({
     title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title cannot exceed 100 characters'),
     description: z.string().min(10, 'Description must be at least 10 characters').max(2000, 'Description cannot exceed 2000 characters'),
@@ -8,7 +29,7 @@ const createProductSchema = z.object({
     condition: z.enum(['new', 'like-new', 'good', 'fair', 'poor'], {
         errorMap: () => ({ message: 'Invalid condition value' }),
     }),
-    category: z.string().min(2, 'Category is required'),
+    category: z.enum(PRODUCT_CATEGORIES as any, {errorMap: () => ({ message: 'Please select a valid category' }),}),
     images: z.array(z.string().url('Each image must be a valid URL')).max(10, 'Maximum 10 images allowed').optional(),
     location: z.string().optional(),
 });
@@ -27,7 +48,7 @@ export const validateCreateProduct = (req: Request, res: Response, next: NextFun
         if (error instanceof z.ZodError) {
             return res.status(400).json({
                 error: 'Validation failed',
-                details: error.errors.map(e => ({
+                details: error.issues.map(e => ({
                     field: e.path.join('.'),
                     message: e.message,
                 })),
@@ -45,7 +66,7 @@ export const validateUpdateProduct = (req: Request, res: Response, next: NextFun
         if (error instanceof z.ZodError) {
             return res.status(400).json({
                 error: 'Validation failed',
-                details: error.errors.map(e => ({
+                details: error.issues.map(e => ({
                     field: e.path.join('.'),
                     message: e.message,
                 })),
