@@ -7,7 +7,7 @@ const router = Router();
 // POST   /sign-up/email          - Register with email/password
 // POST   /sign-in/email          - Login with email/password
 // POST   /sign-out               - Logout
-// GET    /session                - Get current user session
+// GET    /get-session                - Get current user session
 // GET    /google                 - Initiate Google OAuth
 // GET    /google/callback        - Google OAuth callback
 // GET    /github                 - Initiate GitHub OAuth

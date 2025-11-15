@@ -8,6 +8,8 @@ import { toNodeHandler } from "better-auth/node";
 import productRoutes from './routes/productRoutes';
 import searchRoutes from './routes/searchRoutes';
 import orderRoutes from "./routes/orderRoutes";
+import paymentRoutes from "./routes/paymentRoutes";
+import stripeWebhookRoutes from "./routes/stripeWebhookRoutes";
 
 
 export const app = express();
@@ -55,8 +57,11 @@ app.get("/health", (_req, res) => {
     });
 });
 
-// Better Auth routes - mount at /api/auth
-app.use("/api/auth", toNodeHandler(auth));
+// Stripe webhooks - must come BEFORE express.json()
+app.use("/api/webhooks", stripeWebhookRoutes);
+
+// Better Auth routes - Express v5 syntax with *splat
+app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use(express.json());
 
@@ -76,14 +81,18 @@ app.get("/api/public", optionalAuth, (req, res) => {
     });
 });
 
+// App routes
 app.use('/api', productRoutes);
 app.use('/api', searchRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/payments", paymentRoutes);
 
+// 404 handler
 app.use((_req, res) => {
     res.status(404).json({ error: "Route not found" });
 });
 
+// Global error handler
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
       const status = err.status ?? 500;
       const body: any = { error: err.message ?? 'Internal Server Error' };
