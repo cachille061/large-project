@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/listings.dart';
 import 'package:flutter_app/login_page.dart';
 import 'package:flutter_app/sign_up_page.dart';
 import 'package:flutter_app/api_requests.dart';
@@ -89,11 +90,8 @@ class _HomePageState extends State<HomePage> {
         title: Row(
           children: [
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: Text(
-                'MyTechMarketplace',
-                selectionColor: colors.onPrimaryContainer,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: 0),
+              child: Image.asset("assets/logo_1.png"),
             ),
             Spacer(),
             AccountMenu(onLogout: () => reloadState()),
@@ -222,7 +220,9 @@ class _ProductsListState extends State<ProductsList> with RouteAware {
                       "Location: ${product["location"] ?? "Unknown"}",
                       style: TextStyle(
                         fontSize: 12,
-                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSecondaryContainer,
                       ),
                     ),
                     SizedBox(height: 4),
@@ -515,6 +515,15 @@ class _NavBarState extends State<NavBar> {
     );
   }
 
+  void _listingsButton(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => MyListingsPage(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
@@ -546,11 +555,18 @@ class _NavBarState extends State<NavBar> {
                 color: colors.onPrimaryContainer,
                 onPressed: () => _addProductButton(context),
               ),
-            IconButton(
-              icon: Icon(Icons.history),
-              color: colors.onPrimaryContainer,
-              onPressed: () {},
-            ),
+            if (ApiRequests.loggedIn)
+              IconButton(
+                icon: Icon(Icons.storefront),
+                color: colors.onPrimaryContainer,
+                onPressed: () => {_listingsButton(context)},
+              ),
+            if (ApiRequests.loggedIn)
+              IconButton(
+                icon: Icon(Icons.history),
+                color: colors.onPrimaryContainer,
+                onPressed: () {},
+              ),
           ],
         ),
       ),
