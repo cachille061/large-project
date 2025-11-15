@@ -98,7 +98,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       return Scaffold(
         backgroundColor: colors.surface,
         appBar: AppBar(
-          title: const Text("My Listings"),
+          title: const Text("Product Details"),
           backgroundColor: colors.primaryContainer,
         ),
         body: Center(child: CircularProgressIndicator()),
@@ -109,7 +109,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       return Scaffold(
         backgroundColor: colors.surface,
         appBar: AppBar(
-          title: const Text("My Listings"),
+          title: const Text("Product Details"),
           backgroundColor: colors.primaryContainer,
         ),
         body: Center(child: Text(errorText!)),
@@ -120,7 +120,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       return Scaffold(
         backgroundColor: colors.surface,
         appBar: AppBar(
-          title: const Text("My Listings"),
+          title: const Text("Product Details"),
           backgroundColor: colors.primaryContainer,
         ),
         body: Center(
@@ -135,7 +135,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: AppBar(
-        title: const Text("My Listings"),
+        title: const Text("Product Details"),
         backgroundColor: colors.primaryContainer,
       ),
       body: SingleChildScrollView(
@@ -232,7 +232,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         onPressed: purchasing ? null : handlePurchase,
                         icon: const Icon(Icons.shopping_cart),
                         label: Text(
-                          purchasing ? "Processing..." : "Buy Now",
+                          purchasing ? "Added to Cart!" : "Add to Cart",
                           style: TextStyle(color: colors.onTertiaryContainer),
                         ),
                         style: ElevatedButton.styleFrom(
