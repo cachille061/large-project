@@ -1,9 +1,7 @@
+// backend/src/controllers/orderController.ts
 import { Request, Response } from "express";
-import mongoose from "mongoose";
 import Order from "../models/Order";
 import Product from "../models/Products";
-import Wallet from "../models/Wallet";
-
 
 const computeSubtotal = (items: { price: number; qty: number }[]) =>
   items.reduce((s, i) => s + i.price * i.qty, 0);
@@ -12,7 +10,11 @@ const computeSubtotal = (items: { price: number; qty: number }[]) =>
 export const getCurrentOrders = async (req: Request, res: Response) => {
   const uid = req.user?.id;
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
-  const orders = await Order.find({ user: uid, status: "CURRENT" }).sort({ updatedAt: -1 });
+
+  const orders = await Order.find({ user: uid, status: "CURRENT" }).sort({
+    updatedAt: -1,
+  });
+
   res.json(orders);
 };
 
@@ -20,9 +22,14 @@ export const getCurrentOrders = async (req: Request, res: Response) => {
 export const searchCurrentOrders = async (req: Request, res: Response) => {
   const uid = req.user?.id;
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
+
   const q = (req.query.q as string) || "";
   const filter: any = { user: uid, status: "CURRENT" };
-  if (q.trim()) filter.$text = { $search: q.trim() };
+
+  if (q.trim()) {
+    filter.$text = { $search: q.trim() };
+  }
+
   const orders = await Order.find(filter).sort({ updatedAt: -1 });
   res.json(orders);
 };
@@ -33,29 +40,44 @@ export const buyProduct = async (req: Request, res: Response) => {
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
 
   const { productId } = req.body as { productId?: string };
-  if (!productId) return res.status(400).json({ error: "productId required" });
+  if (!productId)
+    return res.status(400).json({ error: "productId required" });
 
   const product: any = await Product.findById(productId);
   if (!product) return res.status(404).json({ error: "Product not found" });
-  if (product.status !== "available") return res.status(409).json({ error: "Product is not available" });
+  if (product.status !== "available")
+    return res
+      .status(409)
+      .json({ error: "Product is not available" });
 
   // one CURRENT order (cart) per user
   let order = await Order.findOne({ user: uid, status: "CURRENT" });
   if (!order) {
-    order = new Order({ user: uid, status: "CURRENT", paymentStatus: "PENDING", items: [], subtotal: 0 });
+    order = new Order({
+      user: uid,
+      status: "CURRENT",
+      paymentStatus: "PENDING",
+      items: [],
+      subtotal: 0,
+    });
   }
 
   // single-unit: don’t allow duplicates
-  const exists = order.items.some(i => i.product.toString() === product._id.toString());
-  if (exists) return res.status(409).json({ error: "Item already in your current order" });
+  const exists = order.items.some(
+    (i) => i.product.toString() === product._id.toString()
+  );
+  if (exists)
+    return res
+      .status(409)
+      .json({ error: "Item already in your current order" });
 
   order.items.push({
     product: product._id,
     title: product.title,
-    price: product.price,      // whole-number dollars
+    price: product.price, // whole-number dollars
     qty: 1,
     imageUrl: product.images?.[0] || "",
-    sellerId: product.sellerId
+    sellerId: product.sellerId,
   });
 
   order.subtotal = computeSubtotal(order.items);
@@ -69,76 +91,63 @@ export const cancelCurrentOrder = async (req: Request, res: Response) => {
   const uid = req.user?.id;
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
 
-  const order = await Order.findOne({ _id: req.params.orderId, user: uid, status: "CURRENT" });
-  if (!order) return res.status(404).json({ error: "Order not found or not cancelable" });
+  const order = await Order.findOne({
+    _id: req.params.orderId,
+    user: uid,
+    status: "CURRENT",
+  });
+
+  if (!order)
+    return res
+      .status(404)
+      .json({ error: "Order not found or not cancelable" });
 
   order.status = "CANCELED";
   await order.save();
+
   res.json(order);
 };
 
 // POST /api/orders/:orderId/checkout
+// This endpoint verifies the order belongs to the user and is ready
+// to be used with /api/payments/stripe/checkout-session.
 export const checkoutOrder = async (req: Request, res: Response) => {
   const uid = req.user?.id;
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
 
-  // method can be "balance" or "mock" (default)
-  const method = (req.query.method as string) || (req.body?.method as string) || "mock";
+  const order = await Order.findOne({
+    _id: req.params.orderId,
+    user: uid,
+    status: "CURRENT",
+  });
 
-  const session = await mongoose.startSession();
-  let final: any = null;
-
-  try {
-    await session.withTransaction(async () => {
-      const order = await Order.findOne({ _id: req.params.orderId, user: uid, status: "CURRENT" }).session(session);
-      if (!order) throw new Error("Order not found");
-
-      // single-unit: verify availability and mark products sold
-      for (const it of order.items) {
-        const p: any = await Product.findById(it.product).session(session);
-        if (!p) throw new Error("Product missing");
-        if (p.status !== "available") throw new Error("Item already sold");
-        p.status = "sold";
-        await p.save({ session });
-      }
-
-      if (method === "balance") {
-        // withdraw from wallet
-        const wallet = await Wallet.findOne({ user: uid }).session(session);
-        if (!wallet || wallet.balance < order.subtotal) {
-          throw new Error("Insufficient balance");
-        }
-        wallet.balance -= order.subtotal;
-        await wallet.save({ session });
-
-        order.paymentStatus = "PAID";
-        order.status = "FULFILLED";
-        await order.save({ session });
-      } else {
-        // mock payment - assume success for now
-        order.paymentStatus = "PAID";
-        order.status = "FULFILLED";
-        await order.save({ session });
-      }
-
-      final = order;
-    });
-  } catch (err: any) {
-    await session.endSession();
-    console.error("Checkout error:", err?.message || err);
-    return res.status(409).json({ error: err?.message || "Checkout failed" });
+  if (!order || order.items.length === 0) {
+    return res
+      .status(404)
+      .json({ error: "Order not found or empty" });
   }
 
-  session.endSession();
-  res.json(final);
-};
+  // Recompute subtotal just in case
+  order.subtotal = computeSubtotal(order.items);
+  await order.save();
 
+  return res.json({
+    message:
+      "Order is ready for checkout. Use /api/payments/stripe/checkout-session to start payment.",
+    order,
+  });
+};
 
 // GET /api/orders/previous
 export const getPreviousOrders = async (req: Request, res: Response) => {
   const uid = req.user?.id;
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
-  const orders = await Order.find({ user: uid, status: "FULFILLED" }).sort({ updatedAt: -1 });
+
+  const orders = await Order.find({
+    user: uid,
+    status: "FULFILLED",
+  }).sort({ updatedAt: -1 });
+
   res.json(orders);
 };
 
@@ -146,16 +155,22 @@ export const getPreviousOrders = async (req: Request, res: Response) => {
 export const searchPreviousOrders = async (req: Request, res: Response) => {
   const uid = req.user?.id;
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
+
   const q = (req.query.q as string) || "";
   const filter: any = { user: uid, status: "FULFILLED" };
-  if (q.trim()) filter.$text = { $search: q.trim() };
+
+  if (q.trim()) {
+    filter.$text = { $search: q.trim() };
+  }
+
   const orders = await Order.find(filter).sort({ updatedAt: -1 });
   res.json(orders);
 };
 
-// DELETE /api/orders/:orderId  (admin guard)
+// DELETE /api/orders/:orderId  (admin guard in future)
 export const adminDeleteOrder = async (req: Request, res: Response) => {
   const del = await Order.findByIdAndDelete(req.params.orderId);
   if (!del) return res.status(404).json({ error: "Order not found" });
+
   res.json({ ok: true });
 };
