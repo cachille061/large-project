@@ -1,30 +1,419 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/login_page.dart';
 import 'package:flutter_app/sign_up_page.dart';
+import 'package:flutter_app/api_requests.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_app/add_product_page.dart';
 
-void main() {
-  runApp(const MyApp());
+late String BACKEND_URL;
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+// This function can be changed to something else by the search menu
+Future<List> Function() searchFunc = () async {
+  return await ApiRequests().getAllProducts();
+};
+const CATEGORIES = [
+  "Computer Parts",
+  "Storage & Memory",
+  "Keyboards",
+  "Mice & Peripherals",
+  "Audio & Headphones",
+  "Phones & Tablets",
+  "Cameras & Webcams",
+  "Printers & Scanners",
+  "Networking",
+  "Cables * Accessories",
+  "Gaming Consoles",
+  "Streaming Equipment",
+];
+const DISPLAY_CONDITIONS = [
+  "New",
+  "Used - Like New",
+  "Used - Excellent",
+  "Used - Fair",
+  "Used - Poor",
+];
+const Map<String, String> DISPLAY_TO_VALID_CONDITION = {
+  "New": 'new',
+  "Used - Like New": 'like-new',
+  "Used - Excellent": 'good',
+  "Used - Fair": 'fair',
+  "Used - Poor": 'poor',
+};
+Future<void> main() async {
+  await dotenv.load();
+  BACKEND_URL = (dotenv.env['API_URL'] ?? '');
+  if (BACKEND_URL == '') throw Error();
+  await ApiRequests().setup();
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'COP4331 Group 2',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
       ),
       home: const HomePage(),
+      navigatorObservers: [routeObserver],
     );
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  void reloadState() {
+    setState(() {});
+  }
+
+  final GlobalKey<_ProductsListState> _productsListKey = GlobalKey();
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Row(
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: Text(
+                'MyTechMarketplace',
+                selectionColor: colors.onPrimaryContainer,
+              ),
+            ),
+            Spacer(),
+            AccountMenu(onLogout: () => reloadState()),
+          ],
+        ),
+        backgroundColor: colors.primaryContainer,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [ProductsList(key: _productsListKey)],
+        ),
+      ),
+      bottomNavigationBar: NavBar(
+        onExitSearch: () => _productsListKey.currentState?.getProducts(),
+      ),
+    );
+  }
+}
+
+class ProductsList extends StatefulWidget {
+  const ProductsList({super.key});
+
+  @override
+  State<ProductsList> createState() => _ProductsListState();
+}
+
+class _ProductsListState extends State<ProductsList> with RouteAware {
+  List<dynamic> products = [];
+  bool loading = false;
+  bool loadingError = false;
+
+  void getProducts() async {
+    setState(() {
+      loading = true;
+      loadingError = false;
+    });
+
+    try {
+      final fetchedProducts = await searchFunc();
+      setState(() {
+        products = fetchedProducts;
+        loading = false;
+      });
+    } catch (error) {
+      setState(() {
+        loadingError = true;
+        loading = false;
+      });
+    }
+  }
+
+  @override
+  initState() {
+    super.initState();
+    debugPrint("Initializing state");
+    getProducts();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to RouteObserver
+    routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when returning to this page
+    getProducts();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return Text("loading...");
+    } else if (loadingError == true) {
+      return Text("Failed to load products!");
+    } else if (products.isEmpty) {
+      return Text("No Products to show!");
+    }
+
+    return Expanded(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(8),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (var product in products)
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.teal.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product["title"] ?? "No title",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      product["description"] ?? "No description",
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "Location: ${product["location"] ?? "Unknown"}",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "Price: \$${product["price"] ?? 0}",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+    ;
+  }
+}
+
+class SearchMenu extends StatefulWidget {
+  const SearchMenu({super.key});
+
+  @override
+  State<SearchMenu> createState() => _SearchMenuState();
+}
+
+class _SearchMenuState extends State<SearchMenu> {
+  static final List<String> selectedCategories = [];
+  static final List<String> selectedConditions = [];
+  static String savedSearch = "";
+  static String savedMin = "";
+  static String savedMax = "";
+  static String savedLocation = "";
+  final searchText = TextEditingController();
+  final minPrice = TextEditingController();
+  final maxPrice = TextEditingController();
+  final location = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (savedSearch != "") searchText.text = savedSearch;
+    searchText.addListener(() {
+      savedSearch = searchText.text;
+      setSearchFunc();
+    });
+    if (savedMin != "") minPrice.text = savedMin;
+    minPrice.addListener(() {
+      savedMin = minPrice.text;
+      setSearchFunc();
+    });
+    if (savedMax != "") maxPrice.text = savedMax;
+    maxPrice.addListener(() {
+      savedMax = maxPrice.text;
+      setSearchFunc();
+    });
+    if (savedLocation != "") location.text = savedLocation;
+    location.addListener(() {
+      savedLocation = location.text;
+      setSearchFunc();
+    });
+  }
+
+  void setSearchFunc() {
+    if (searchText.text.isEmpty &&
+        selectedCategories.isEmpty &&
+        selectedConditions.isEmpty &&
+        minPrice.text.isEmpty &&
+        maxPrice.text.isEmpty &&
+        location.text.isEmpty) {
+      searchFunc = () async {
+        return await ApiRequests().getAllProducts();
+      };
+    } else {
+      searchFunc = () async {
+        return await ApiRequests().searchProducts(
+          query: searchText.text.isEmpty ? null : searchText.text,
+          category: selectedCategories.isEmpty ? null : selectedCategories[0],
+          condition: selectedConditions.isEmpty ? null : selectedConditions[0],
+          minPrice: minPrice.text.isEmpty ? null : double.parse(minPrice.text),
+          maxPrice: maxPrice.text.isEmpty ? null : double.parse(maxPrice.text),
+        );
+      };
+    }
+  }
+
+  void clearFilters() {
+    searchText.clear();
+    minPrice.clear();
+    maxPrice.clear();
+    location.clear();
+    setState(() {
+      savedSearch = "";
+      savedMin = "";
+      savedMax = "";
+      savedLocation = "";
+      selectedConditions.clear();
+      selectedCategories.clear();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextButton(child: Text("Reset Filters"), onPressed: clearFilters),
+          TextField(
+            controller: searchText,
+            decoration: InputDecoration(
+              labelText: 'Search products',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.search),
+            ),
+          ),
+          TextFormField(
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              labelText: 'Location',
+            ),
+            controller: location,
+          ),
+          TextFormField(
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              labelText: 'Minimum Price',
+            ),
+            controller: minPrice,
+          ),
+          TextFormField(
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              labelText: 'Maximum Price',
+            ),
+            controller: maxPrice,
+          ),
+          const SizedBox(height: 16),
+          Align(alignment: Alignment.centerLeft, child: Text('Categories')),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (var category in CATEGORIES)
+                ChoiceChip(
+                  label: Text(category),
+                  selected: selectedCategories.contains(category),
+                  onSelected: (isSelected) {
+                    setState(() {
+                      if (isSelected) {
+                        selectedCategories.add(category);
+                      } else {
+                        selectedCategories.remove(category);
+                      }
+                    });
+                  },
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    // Remove listeners but DO NOT dispose static controllers
+    searchText.dispose();
+    minPrice.dispose();
+    maxPrice.dispose();
+    location.dispose();
+    super.dispose();
+  }
+}
+
+class AccountMenu extends StatefulWidget {
+  final Function onLogout;
+  const AccountMenu({super.key, required this.onLogout});
+
+  @override
+  State<AccountMenu> createState() => _AccountMenuState();
+}
+
+class _AccountMenuState extends State<AccountMenu> {
   void _loginButton(BuildContext context) {
     Navigator.push(
       context,
@@ -43,99 +432,128 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // This widget is the root of your application.
+  void _logoutButton(BuildContext context) async {
+    await ApiRequests().signOut();
+    setState(() {
+      widget.onLogout();
+    });
+    return;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: Text('MyTechMarketplace'),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: SizedBox(
-                width: 100,
-                child: FloatingActionButton(
-                  onPressed: () => _loginButton(context),
-                  child: const Text("Login", style: TextStyle(fontSize: 24)),
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: SizedBox(
-                width: 100,
-                child: FloatingActionButton(
-                  onPressed: () => _signupButton(context),
-                  child: const Text("Sign Up", style: TextStyle(fontSize: 24)),
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [ProductsList()],
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.all(5),
-        child: Container(
-          color: Theme.of(context).secondaryHeaderColor,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(icon: Icon(Icons.search), onPressed: () {}),
-              IconButton(icon: Icon(Icons.home), onPressed: () {}),
-              IconButton(icon: Icon(Icons.sell), onPressed: () {}),
-              IconButton(icon: Icon(Icons.history), onPressed: () {}),
-            ],
-          ),
-        ),
-      ),
+    return PopupMenuButton<int>(
+      icon: Icon(Icons.more_vert),
+      onSelected: (int result) {
+        if (!ApiRequests.loggedIn) {
+          if (result == 1) {
+            _loginButton(context);
+          } else if (result == 2) {
+            _signupButton(context);
+          }
+        } else {
+          if (result == 3) {
+            _logoutButton(context);
+          }
+        }
+      },
+      itemBuilder: (BuildContext context) {
+        if (!ApiRequests.loggedIn) {
+          return [
+            PopupMenuItem<int>(value: 1, child: Text('Login')),
+            PopupMenuItem<int>(value: 2, child: Text('Sign Up')),
+          ];
+        } else {
+          return [PopupMenuItem<int>(value: 3, child: Text('Logout'))];
+        }
+      },
     );
   }
 }
 
-class ProductsList extends StatefulWidget {
-  const ProductsList({super.key});
+class NavBar extends StatefulWidget {
+  final Function onExitSearch;
+  const NavBar({super.key, required this.onExitSearch});
 
   @override
-  State<ProductsList> createState() => _ProductsListState();
+  State<NavBar> createState() => _NavBarState();
 }
 
-class _ProductsListState extends State<ProductsList> {
-  final products = [
-    "Razer Keyboard",
-    "Logitech Gaming Mouse",
-    "Corsair Mechanical Keyboard",
-    "ASUS ROG Gaming Laptop",
-    "Dell Ultrasharp Monitor",
-    "Apple MacBook Pro",
-    "Samsung SSD 1TB",
-    "NVIDIA GeForce RTX 4090",
-    "AMD Ryzen 9 Processor",
-    "HyperX Cloud II Headset",
-    "SteelSeries Mouse Pad",
-    "Elgato Stream Deck",
-    "Logitech Brio Webcam",
-    "Anker USB-C Hub",
-    "Sony WH-1000XM5 Headphones",
-    "Raspberry Pi 5",
-    "Intel Core i9 CPU",
-    "ASUS TUF Motherboard",
-    "Crucial DDR5 RAM 32GB",
-    "WD Black NVMe SSD 2TB",
-  ];
+class _NavBarState extends State<NavBar> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  _searchButton(BuildContext context) async {
+    await showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return const SearchMenu();
+      },
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+    );
+    widget.onExitSearch();
+  }
+
+  void _addProductButton(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => AddProductPage(),
+      ),
+    );
+  }
+
+  void _homeButton(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(builder: (BuildContext context) => HomePage()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [for (var product in products) Text(product)]);
+    final ColorScheme colors = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: EdgeInsets.all(5),
+      child: Container(
+        height: 40,
+        decoration: BoxDecoration(
+          color: colors.primaryContainer,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            IconButton(
+              icon: Icon(Icons.search),
+              color: colors.onPrimaryContainer,
+              onPressed: () => {_searchButton(context)},
+            ),
+            IconButton(
+              icon: Icon(Icons.home),
+              color: colors.onPrimaryContainer,
+              onPressed: () => _homeButton(context),
+            ),
+            if (ApiRequests.loggedIn)
+              IconButton(
+                icon: Icon(Icons.add),
+                color: colors.onPrimaryContainer,
+                onPressed: () => _addProductButton(context),
+              ),
+            IconButton(
+              icon: Icon(Icons.history),
+              color: colors.onPrimaryContainer,
+              onPressed: () {},
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

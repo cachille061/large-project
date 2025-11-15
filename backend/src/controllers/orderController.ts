@@ -1,4 +1,3 @@
-// backend/src/controllers/orderController.ts
 import { Request, Response } from "express";
 import Order from "../models/Order";
 import Product from "../models/Products";

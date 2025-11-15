@@ -19,6 +19,28 @@ const client = new MongoClient(process.env.MONGODB_URI);
 await client.connect();
 const db = client.db(); // Uses the database specified in the connection string
 
+const useFlutterCors = process.env.USE_FLUTTER_CORS === 'true';
+let trustedOrigins;
+if (useFlutterCors) {
+  trustedOrigins = (request: any): string[] => {
+    const origin = request.headers['origin'] as string | undefined;
+    if (
+      origin &&
+      (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))
+    ) {
+      return [origin];
+    }
+    return [];
+  };
+}
+else {
+  trustedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    process.env.FRONTEND_URL || "",
+  ].filter(Boolean);
+}
+
 export const auth = betterAuth({
     // Use MongoDB adapter with both db and client
     database: mongodbAdapter(db, { client }),
@@ -43,11 +65,7 @@ export const auth = betterAuth({
         },
     },
 
-    trustedOrigins: [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        process.env.FRONTEND_URL || "",
-    ].filter(Boolean),
+    trustedOrigins: trustedOrigins,
 
     // Session configuration
     session: {
