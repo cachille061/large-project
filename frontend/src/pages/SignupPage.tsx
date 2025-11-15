@@ -27,22 +27,20 @@ export function SignupPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
 
     setLoading(true);
 
     try {
-      const success = await signup(email, password, name);
-      if (success) {
-        navigate("/");
-      } else {
-        setError("Email already exists");
-      }
-    } catch (err) {
-      setError("An error occurred. Please try again.");
+      await signup(email, password, name);
+      // Small delay to ensure session is established before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
+      navigate("/");
+    } catch (err: any) {
+      setError(err.message || "An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -57,10 +55,10 @@ export function SignupPage() {
               <Cpu style={{ width: '28px', height: '28px', color: 'white' }} />
             </div>
           </div>
-          <CardTitle style={{ fontSize: '24px', fontWeight: 'bold', textAlign: 'center', marginBottom: '8px', color: '#1C3D51' }}>
+          <CardTitle style={{ fontSize: '32px', fontWeight: '700', textAlign: 'center', marginBottom: '8px', color: '#1C3D51', fontFamily: '"Architects Daughter", cursive' }}>
             Create an account
           </CardTitle>
-          <CardDescription style={{ textAlign: 'center', fontSize: '14px', color: '#66655F' }}>
+          <CardDescription style={{ textAlign: 'center', fontSize: '18px', color: '#000', fontFamily: '"Architects Daughter", cursive', fontWeight: '600' }}>
             Join CoreMarket today
           </CardDescription>
         </CardHeader>
@@ -106,9 +104,11 @@ export function SignupPage() {
               <Input
                 id="password"
                 type="password"
+                placeholder="Min. 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={8}
                 style={{ width: '100%', padding: '8px 12px', fontSize: '14px', borderRadius: '6px', border: '1px solid #d1d5db' }}
               />
             </div>
@@ -119,9 +119,11 @@ export function SignupPage() {
               <Input
                 id="confirmPassword"
                 type="password"
+                placeholder="Re-enter password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                minLength={8}
                 style={{ width: '100%', padding: '8px 12px', fontSize: '14px', borderRadius: '6px', border: '1px solid #d1d5db' }}
               />
             </div>

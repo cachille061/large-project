@@ -49,6 +49,8 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: false,
+        minPasswordLength: 8, // Explicitly set to match frontend validation
+        maxPasswordLength: 128,
     },
 
     // Social providers (OAuth 2.0)
@@ -78,6 +80,16 @@ export const auth = betterAuth({
 
     // Secret for signing tokens
     secret: process.env.BETTER_AUTH_SECRET,
+
+    // Advanced configuration for cookies (critical for localhost development)
+    advanced: {
+        cookies: {
+            // Set SameSite to Lax for development (allows cookies with navigation)
+            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+            // Don't require HTTPS in development
+            secure: process.env.NODE_ENV === 'production',
+        },
+    },
 
     plugins: [
         admin() as any // Enable admin plugin (optional, for future admin features)

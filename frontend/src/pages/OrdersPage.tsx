@@ -22,16 +22,17 @@ import { EmptyState } from "../components/EmptyState";
 
 export function OrdersPage() {
   const { user, isAuthenticated } = useAuth();
-  const { getOrdersByBuyer, cancelOrder } = useData();
+  const { getOrdersByBuyer, cancelOrder, completeOrder } = useData();
   const navigate = useNavigate();
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
+  const [orderToCheckout, setOrderToCheckout] = useState<string | null>(null);
 
   if (!isAuthenticated) {
     return (
       <main className="flex-1 p-6">
         <div className="max-w-4xl mx-auto text-center py-12">
           <h2 className="mb-2">Please Sign In</h2>
-          <p className="text-gray-600 mb-4">You need to sign in to view your orders</p>
+          <p className="text-black mb-4">You need to sign in to view your orders</p>
           <Button onClick={() => navigate("/login")}>Sign In</Button>
         </div>
       </main>
@@ -51,10 +52,24 @@ export function OrdersPage() {
     }
   };
 
+  const handleCheckoutOrder = async () => {
+    if (orderToCheckout) {
+      try {
+        await completeOrder(orderToCheckout);
+        toast.success("Order completed successfully!");
+        setOrderToCheckout(null);
+      } catch (error) {
+        toast.error("Failed to checkout. Please try again.");
+      }
+    }
+  };
+
   return (
     <main className="flex-1 p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="mb-6">My Orders</h1>
+        <h2 className="text-heading-secondary mb-6" style={{ color: '#1C3D51', fontWeight: '700', fontFamily: '"Architects Daughter", cursive' }}>
+          My Orders
+        </h2>
 
         {allOrders.length === 0 ? (
           <EmptyState
@@ -82,14 +97,15 @@ export function OrdersPage() {
             </TabsList>
 
             <TabsContent value="all" className="mt-6">
-              <div className="space-y-4">
+              <div className="max-w-3xl mx-auto space-y-4">
                 {allOrders.map((order) => (
                   <OrderCard
                     key={order.id}
                     order={order}
                     onViewProduct={(productId) => navigate(`/product/${productId}`)}
                     onCancelOrder={setOrderToCancel}
-                    showCancelButton={true}
+                    onCheckoutOrder={setOrderToCheckout}
+                    showActions={true}
                   />
                 ))}
               </div>
@@ -103,14 +119,15 @@ export function OrdersPage() {
                   description=""
                 />
               ) : (
-                <div className="space-y-4">
+                <div className="max-w-3xl mx-auto space-y-4">
                   {pendingOrders.map((order) => (
                     <OrderCard
                       key={order.id}
                       order={order}
                       onViewProduct={(productId) => navigate(`/product/${productId}`)}
                       onCancelOrder={setOrderToCancel}
-                      showCancelButton={true}
+                      onCheckoutOrder={setOrderToCheckout}
+                      showActions={true}
                     />
                   ))}
                 </div>
@@ -125,13 +142,13 @@ export function OrdersPage() {
                   description=""
                 />
               ) : (
-                <div className="space-y-4">
+                <div className="max-w-3xl mx-auto space-y-4">
                   {completedOrders.map((order) => (
                     <OrderCard
                       key={order.id}
                       order={order}
                       onViewProduct={(productId) => navigate(`/product/${productId}`)}
-                      showCancelButton={false}
+                      showActions={false}
                     />
                   ))}
                 </div>
@@ -146,13 +163,13 @@ export function OrdersPage() {
                   description=""
                 />
               ) : (
-                <div className="space-y-4">
+                <div className="max-w-3xl mx-auto space-y-4">
                   {cancelledOrders.map((order) => (
                     <OrderCard
                       key={order.id}
                       order={order}
                       onViewProduct={(productId) => navigate(`/product/${productId}`)}
-                      showCancelButton={false}
+                      showActions={false}
                     />
                   ))}
                 </div>
@@ -173,6 +190,21 @@ export function OrdersPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Keep Order</AlertDialogCancel>
             <AlertDialogAction onClick={handleCancelOrder}>Cancel Order</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!orderToCheckout} onOpenChange={() => setOrderToCheckout(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Complete Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to checkout? This will mark the products as sold and complete your purchase.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go Back</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCheckoutOrder}>Complete Purchase</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

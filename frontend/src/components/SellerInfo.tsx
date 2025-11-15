@@ -38,7 +38,7 @@ export function SellerInfo({ sellerId, sellerName, location }: SellerInfoProps) 
         </Avatar>
         <div>
           <p style={{ fontWeight: '500', color: '#1C3D51' }}>{sellerName}</p>
-          <p className="text-tiny text-muted">{location}</p>
+          <p className="text-tiny text-black">{location}</p>
         </div>
       </div>
     </div>

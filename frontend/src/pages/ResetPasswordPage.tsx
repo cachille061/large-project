@@ -44,13 +44,13 @@ export function ResetPasswordPage() {
               <Cpu className="w-7 h-7 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl text-center">Reset password</CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-center" style={{ fontSize: '32px', fontWeight: '700', color: '#1C3D51', fontFamily: '"Architects Daughter", cursive' }}>Reset password</CardTitle>
+          <CardDescription className="text-center" style={{ fontSize: '18px', color: '#000', fontFamily: '"Architects Daughter", cursive', fontWeight: '600' }}>
             Enter your email to receive reset instructions
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4" style={{ paddingBottom: '1.5rem' }}>
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -76,7 +76,7 @@ export function ResetPasswordPage() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col space-y-4" style={{ paddingTop: '0.5rem' }}>
             <Button type="submit" className="w-full nautical-primary hover:nautical-primary-dark" disabled={loading}>
               {loading ? "Sending..." : "Send reset instructions"}
             </Button>

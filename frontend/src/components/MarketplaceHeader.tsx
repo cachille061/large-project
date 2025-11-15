@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { useData } from "../contexts/DataContext";
+import { searchApi } from "../services/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,43 +49,33 @@ export function MarketplaceHeader() {
     }
   };
 
-  const searchSuggestions = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    
-    const query = searchQuery.toLowerCase();
-    const suggestions = new Set<string>();
-    
-    // Predefined tech-related keywords
-    const techKeywords = [
-      'laptop', 'computer', 'desktop', 'monitor', 'keyboard', 'mouse',
-      'headphones', 'gaming', 'macbook', 'ipad', 'tablet', 'smartphone',
-      'camera', 'microphone', 'webcam', 'graphics card', 'gpu', 'cpu',
-      'processor', 'ram', 'memory', 'storage', 'ssd', 'hard drive',
-      'wireless', 'bluetooth', 'usb', 'charger', 'cable', 'adapter',
-      'speaker', 'audio', 'mechanical', 'rgb', 'streaming', 'gaming chair',
-      'desk', 'accessories', 'tech', 'electronics', 'apple', 'dell',
-      'hp', 'lenovo', 'asus', 'samsung', 'sony', 'logitech', 'razer',
-      '4k', 'ultrawide', 'curved', 'oled', 'lcd', 'led'
-    ];
-    
-    // Add matching tech keywords
-    techKeywords.forEach((keyword) => {
-      if (keyword.includes(query)) {
-        suggestions.add(keyword);
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+
+  // Fetch suggestions from backend API
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!searchQuery.trim() || searchQuery.trim().length < 2) {
+        setSearchSuggestions([]);
+        return;
       }
-    });
-    
-    // Add matching categories from actual products
-    products
-      .filter((p) => p.status === "active")
-      .forEach((p) => {
-        if (p.category.toLowerCase().includes(query)) {
-          suggestions.add(p.category);
-        }
-      });
-    
-    return Array.from(suggestions).slice(0, 6);
-  }, [products, searchQuery]);
+
+      try {
+        setIsLoadingSuggestions(true);
+        const response = await searchApi.getSuggestions(searchQuery.trim());
+        setSearchSuggestions(response.suggestions || []);
+      } catch (error) {
+        console.error('Failed to fetch suggestions:', error);
+        setSearchSuggestions([]);
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    };
+
+    // Debounce API calls
+    const timeoutId = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -134,56 +125,7 @@ export function MarketplaceHeader() {
             }}
             onClick={() => navigate("/")}
           >
-            <svg width="240" height="48" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: '#285570', stopOpacity: 1 }} />
-                  <stop offset="50%" style={{ stopColor: '#3B9FBC', stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: '#5899B5', stopOpacity: 1 }} />
-                </linearGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                  <feMerge>
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
-              </defs>
-              
-              {/* Computer chip icon on the left */}
-              <g transform="translate(6, 8)">
-                <rect x="0" y="0" width="32" height="32" rx="6" fill="url(#logoGradient)" style={{ filter: 'url(#glow)' }}/>
-                <rect x="2" y="2" width="28" height="28" rx="4" fill="rgba(255, 255, 255, 0.2)"/>
-                
-                {/* Chip details */}
-                <rect x="10" y="10" width="12" height="12" rx="1" fill="#FFFFFF" opacity="0.9"/>
-                <line x1="10" y1="14" x2="0" y2="14" stroke="#FFFFFF" strokeWidth="2" opacity="0.7"/>
-                <line x1="22" y1="14" x2="32" y2="14" stroke="#FFFFFF" strokeWidth="2" opacity="0.7"/>
-                <line x1="10" y1="18" x2="0" y2="18" stroke="#FFFFFF" strokeWidth="2" opacity="0.7"/>
-                <line x1="22" y1="18" x2="32" y2="18" stroke="#FFFFFF" strokeWidth="2" opacity="0.7"/>
-                <line x1="14" y1="10" x2="14" y2="0" stroke="#FFFFFF" strokeWidth="2" opacity="0.7"/>
-                <line x1="18" y1="10" x2="18" y2="0" stroke="#FFFFFF" strokeWidth="2" opacity="0.7"/>
-                <line x1="14" y1="22" x2="14" y2="32" stroke="#FFFFFF" strokeWidth="2" opacity="0.7"/>
-                <line x1="18" y1="22" x2="18" y2="32" stroke="#FFFFFF" strokeWidth="2" opacity="0.7"/>
-              </g>
-              
-              {/* Text with slight cursive style */}
-              <text
-                x="50"
-                y="30"
-                fontFamily="'Trebuchet MS', 'Lucida Sans', sans-serif"
-                fontSize="28"
-                fontWeight="600"
-                fill="url(#logoGradient)"
-                letterSpacing="0.8"
-                fontStyle="italic"
-              >
-                COREMARKET
-              </text>
-              
-              {/* Subtle underline accent */}
-              <rect x="50" y="33" width="70" height="2.5" fill="#3B9FBC" opacity="0.4" rx="1.25"/>
-            </svg>
+            <img src="/logo.png" alt="CoreMarket" height="48" style={{ height: '48px', width: 'auto' }} />
           </div>
 
           {/* Search */}
@@ -349,7 +291,6 @@ export function MarketplaceHeader() {
                       </Button>
                     </div>
                   )}
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate("/profile")}>
                     <User style={{ width: '16px', height: '16px', marginRight: '8px' }} />
                     View Profile
@@ -362,7 +303,6 @@ export function MarketplaceHeader() {
                     <Package style={{ width: '16px', height: '16px', marginRight: '8px' }} />
                     My Listings
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut style={{ width: '16px', height: '16px', marginRight: '8px' }} />
                     Logout

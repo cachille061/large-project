@@ -15,6 +15,7 @@ import { AddEditProductPage } from "./pages/AddEditProductPage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { PublicProfilePage } from "./pages/PublicProfilePage";
+import { FontGalleryPage } from "./pages/FontGalleryPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -134,6 +135,14 @@ function AppRoutes() {
         element={
           <AppLayout>
             <ProductSearchPage />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/fonts"
+        element={
+          <AppLayout>
+            <FontGalleryPage />
           </AppLayout>
         }
       />

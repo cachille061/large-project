@@ -1,5 +1,5 @@
 // backend/src/services/user.service.ts
-import mongoose from 'mongoose';
+import { db } from '../middlewares/auth';
 
 /**
  * Fetch a single user by their ID from Better Auth's user collection
@@ -8,23 +8,23 @@ import mongoose from 'mongoose';
  */
 export const getUserById = async (userId: string) => {
     try {
-        const usersCollection = mongoose.connection.collection('user');
+        const usersCollection = db.collection('user');
+        const { ObjectId } = await import('mongodb');
 
         const user = await usersCollection.findOne(
-            { id: userId },
+            { _id: new ObjectId(userId) },
             {
                 projection: {
-                    id: 1,
                     name: 1,
                     email: 1,
                     image: 1,
                     createdAt: 1,
-                    _id: 0 // Exclude MongoDB's internal _id
+                    _id: 1
                 }
             }
         );
 
-        return user;
+        return user ? { ...user, id: user._id.toString() } : null;
     } catch (error) {
         console.error('Error fetching user by ID:', error);
         return null;
@@ -38,23 +38,22 @@ export const getUserById = async (userId: string) => {
  */
 export const getUserByEmail = async (email: string) => {
     try {
-        const usersCollection = mongoose.connection.collection('user');
+        const usersCollection = db.collection('user');
 
         const user = await usersCollection.findOne(
             { email },
             {
                 projection: {
-                    id: 1,
                     name: 1,
                     email: 1,
                     image: 1,
                     createdAt: 1,
-                    _id: 0
+                    _id: 1
                 }
             }
         );
 
-        return user;
+        return user ? { ...user, id: user._id.toString() } : null;
     } catch (error) {
         console.error('Error fetching user by email:', error);
         return null;
@@ -68,24 +67,88 @@ export const getUserByEmail = async (email: string) => {
  */
 export const getUsersByIds = async (userIds: string[]) => {
     try {
-        const usersCollection = mongoose.connection.collection('user');
+        const usersCollection = db.collection('user');
+        const { ObjectId } = await import('mongodb');
+
+        // Convert string IDs to ObjectIds
+        const objectIds = userIds.map(id => {
+            try {
+                return new ObjectId(id);
+            } catch (e) {
+                console.error('Invalid ObjectId:', id);
+                return null;
+            }
+        }).filter(Boolean);
 
         const users = await usersCollection.find(
-            { id: { $in: userIds } },
+            { _id: { $in: objectIds } },
             {
                 projection: {
-                    id: 1,
                     name: 1,
                     email: 1,
                     image: 1,
-                    _id: 0
+                    _id: 1
                 }
             }
         ).toArray();
 
-        return users;
+        // Add id field from _id for consistency
+        return users.map(user => ({ ...user, id: user._id.toString() }));
     } catch (error) {
         console.error('Error fetching users by IDs:', error);
         return [];
     }
+};
+
+/**
+ * Enrich products array with seller information
+ * @param products - Array of products
+ * @returns Products with sellerName and sellerEmail added
+ */
+export const enrichProductsWithSellerInfo = async (products: any[]) => {
+    if (!products || products.length === 0) return products;
+    
+    // Get unique seller IDs
+    const sellerIds = [...new Set(products.map((p: any) => p.sellerId).filter(Boolean))];
+    
+    if (sellerIds.length === 0) return products;
+    
+    // Fetch all sellers at once
+    const sellers = await getUsersByIds(sellerIds);
+    
+    // Create a map for quick lookup
+    const sellerMap = new Map();
+    sellers.forEach((seller: any) => {
+        sellerMap.set(seller.id, seller);
+    });
+    
+    // Add seller info to each product
+    return products.map((product: any) => {
+        const seller = sellerMap.get(product.sellerId);
+        const productObj = product.toObject ? product.toObject() : product;
+        
+        return {
+            ...productObj,
+            sellerName: seller?.name || seller?.email || 'Unknown Seller',
+            sellerEmail: seller?.email || '',
+        };
+    });
+};
+
+/**
+ * Enrich single product with seller information
+ * @param product - Single product
+ * @returns Product with sellerName and sellerEmail added
+ */
+export const enrichProductWithSellerInfo = async (product: any) => {
+    if (!product) return product;
+    
+    const seller = await getUserById(product.sellerId);
+    const productObj = product.toObject ? product.toObject() : product;
+    
+    return {
+        ...productObj,
+        sellerName: seller?.name || seller?.email || 'Unknown Seller',
+        sellerEmail: seller?.email || '',
+    };
 };

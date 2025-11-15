@@ -55,8 +55,8 @@ app.get("/health", (_req, res) => {
     });
 });
 
-// Better Auth routes - Express v5 syntax with *splat
-app.all("/api/auth/*splat", toNodeHandler(auth));
+// Better Auth routes - mount at /api/auth
+app.use("/api/auth", toNodeHandler(auth));
 
 app.use(express.json());
 

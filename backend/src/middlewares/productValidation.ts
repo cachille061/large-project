@@ -13,7 +13,9 @@ const createProductSchema = z.object({
     location: z.string().optional(),
 });
 
-const updateProductSchema = createProductSchema.partial();
+const updateProductSchema = createProductSchema.partial().extend({
+    status: z.enum(['available', 'sold', 'pending', 'delisted']).optional(),
+});
 
 const productIdSchema = z.object({
     id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid product ID format'),

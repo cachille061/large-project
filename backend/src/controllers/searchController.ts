@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Product from '../models/Products';
 import { SearchQuery } from '../middlewares/searchValidation';
+import { enrichProductsWithSellerInfo } from '../utils/userHelper';
 
 export const searchProducts = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -100,16 +101,17 @@ export const searchProducts = async (req: Request, res: Response): Promise<void>
         const totalResults = await Product.countDocuments(query);
         const totalPages = Math.ceil(totalResults / limit);
 
+        // Enrich products with seller information
+        const enrichedProducts = await enrichProductsWithSellerInfo(products);
+
         // Response with results and pagination metadata
         res.json({
-            results: products,
+            products: enrichedProducts,
             pagination: {
-                currentPage: page,
-                totalPages,
-                totalResults,
-                resultsPerPage: limit,
-                hasNextPage: page < totalPages,
-                hasPrevPage: page > 1,
+                page: page,
+                limit: limit,
+                total: totalResults,
+                pages: totalPages,
             },
             filters: {
                 query: q || null,
@@ -146,30 +148,33 @@ export const getSearchSuggestions = async (req: Request, res: Response): Promise
             return;
         }
 
-        const regex = new RegExp(q, 'i');
+        const regex = new RegExp(`^${q}`, 'i'); // Match at the start of the string
 
-        // Titles: match -> group to dedupe -> sort by frequency -> limit -> project to {term}
+        // 1. Get product titles that START with the query (highest priority)
         const titleAgg = await Product.aggregate<{ term: string }>([
             { $match: { title: { $regex: regex }, status: 'available' } },
             { $group: { _id: '$title', count: { $sum: 1 } } },
             { $sort: { count: -1, _id: 1 } },
-            { $limit: 5 },
+            { $limit: 7 },
             { $project: { _id: 0, term: '$_id' } }
         ]);
 
-        // Categories: same pattern
+        // 2. Get categories that START with the query (lower priority)
         const categoryAgg = await Product.aggregate<{ term: string }>([
             { $match: { category: { $regex: regex }, status: 'available' } },
             { $group: { _id: '$category', count: { $sum: 1 } } },
             { $sort: { count: -1, _id: 1 } },
-            { $limit: 5 },
+            { $limit: 3 },
             { $project: { _id: 0, term: '$_id' } }
         ]);
 
-        // Combine & dedupe, cap to 10
-        const suggestions = Array.from(
-            new Set([...titleAgg.map(x => x.term), ...categoryAgg.map(x => x.term)])
-        ).slice(0, 10);
+        // Product titles first, then categories, remove duplicates, cap at 10
+        const suggestions = [
+            ...titleAgg.map(x => x.term),
+            ...categoryAgg.map(x => x.term).filter(cat => 
+                !titleAgg.some(title => title.term.toLowerCase() === cat.toLowerCase())
+            )
+        ].slice(0, 10);
 
         res.json({ suggestions });
     } catch (error) {
@@ -194,7 +199,7 @@ export const getPopularSearches = async (_req: Request, res: Response): Promise<
         ]);
 
         res.json({
-            popularSearches: popularCategories,
+            popular: popularCategories.map(c => c.term),
         });
     } catch (error) {
         console.error('Popular searches error:', error);

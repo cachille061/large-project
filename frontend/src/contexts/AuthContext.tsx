@@ -1,54 +1,71 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext } from "react";
+import { useSession, signIn, signUp, signOut } from "../lib/auth";
 
 interface User {
   id: string;
   email: string;
   name: string;
-  profilePicture?: string;
+  image?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (email: string, password: string, name: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<boolean>;
   updateProfilePicture: (imageUrl: string) => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const { data: session, isPending } = useSession();
 
-  useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem("currentUser");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
+  const user: User | null = session?.user
+    ? {
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+        image: session.user.image,
+      }
+    : null;
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock login - check against localStorage users
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const foundUser = users.find(
-      (u: any) => u.email === email && u.password === password
-    );
-
-    if (foundUser) {
-      const userToStore = {
-        id: foundUser.id,
-        email: foundUser.email,
-        name: foundUser.name,
-        profilePicture: foundUser.profilePicture,
-      };
-      setUser(userToStore);
-      localStorage.setItem("currentUser", JSON.stringify(userToStore));
+    try {
+      const { data, error } = await signIn.email(
+        {
+          email,
+          password,
+        },
+        {
+          onRequest: () => {
+            console.log("Login request started");
+          },
+          onSuccess: () => {
+            console.log("Login successful");
+          },
+          onError: (ctx) => {
+            console.error("Login error context:", ctx.error);
+          },
+        }
+      );
+      
+      // Check if there was an error
+      if (error) {
+        throw new Error(error.message || "Invalid email or password");
+      }
+      
+      // Wait a moment for the session to be established
+      await new Promise(resolve => setTimeout(resolve, 100));
       return true;
+    } catch (error: any) {
+      console.error("Login error:", error);
+      // Re-throw with user-friendly message
+      throw new Error(error?.message || "Invalid email or password");
     }
-    return false;
   };
 
   const signup = async (
@@ -56,62 +73,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     name: string
   ): Promise<boolean> => {
-    // Mock signup - store in localStorage
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    
-    // Check if user already exists
-    if (users.find((u: any) => u.email === email)) {
-      return false;
+    try {
+      const { data, error } = await signUp.email(
+        {
+          email,
+          password,
+          name,
+        },
+        {
+          onRequest: () => {
+            console.log("Signup request started");
+          },
+          onSuccess: () => {
+            console.log("Signup successful");
+          },
+          onError: (ctx) => {
+            console.error("Signup error context:", ctx.error);
+          },
+        }
+      );
+      
+      // Check if there was an error
+      if (error) {
+        throw new Error(error.message || "Failed to create account");
+      }
+      
+      // Wait a moment for the session to be established
+      await new Promise(resolve => setTimeout(resolve, 100));
+      return true;
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      // Re-throw with user-friendly message
+      throw new Error(error?.message || "Failed to create account");
     }
-
-    const newUser = {
-      id: `user_${Date.now()}`,
-      email,
-      password,
-      name,
-      profilePicture: undefined,
-    };
-
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
-
-    const userToStore = {
-      id: newUser.id,
-      email: newUser.email,
-      name: newUser.name,
-      profilePicture: undefined,
-    };
-    setUser(userToStore);
-    localStorage.setItem("currentUser", JSON.stringify(userToStore));
-    return true;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("currentUser");
+  const logout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const resetPassword = async (email: string): Promise<boolean> => {
-    // Mock password reset
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const foundUser = users.find((u: any) => u.email === email);
-    return !!foundUser;
+    try {
+      // Better Auth password reset would be implemented here
+      // For now, return true to maintain compatibility
+      console.log("Password reset requested for:", email);
+      return true;
+    } catch (error) {
+      console.error("Reset password error:", error);
+      return false;
+    }
   };
 
   const updateProfilePicture = (imageUrl: string) => {
-    if (!user) return;
-
-    // Update current user state
-    const updatedUser = { ...user, profilePicture: imageUrl };
-    setUser(updatedUser);
-    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-
-    // Update in users list
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const updatedUsers = users.map((u: any) =>
-      u.id === user.id ? { ...u, profilePicture: imageUrl } : u
-    );
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    // This would need to be implemented via Better Auth's update user endpoint
+    console.log("Update profile picture:", imageUrl);
   };
 
   return (
@@ -124,6 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resetPassword,
         updateProfilePicture,
         isAuthenticated: !!user,
+        isLoading: isPending,
       }}
     >
       {children}

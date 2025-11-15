@@ -23,7 +23,7 @@ export function PublicProfilePage() {
       <main className="container-page" style={{ backgroundColor: '#F8F5F0' }}>
         <div className="container-centered text-center" style={{ padding: '48px 0' }}>
           <h2 className="text-heading-secondary">Seller Not Found</h2>
-          <p className="text-muted">This seller profile doesn't exist</p>
+          <p className="text-black">This seller profile doesn't exist</p>
           <Button onClick={() => navigate("/")}>Back to Home</Button>
         </div>
       </main>
@@ -75,7 +75,7 @@ export function PublicProfilePage() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="profile-name">{seller.name}</h1>
+              <h1 className="profile-name" style={{ fontFamily: '"Architects Daughter", cursive', fontWeight: '700' }}>{seller.name}</h1>
               <p className="profile-email">Community Member</p>
             </div>
           </div>
@@ -103,22 +103,23 @@ export function PublicProfilePage() {
         {/* Active Listings Section */}
         <Card className="card-shadow" style={{ marginTop: '24px' }}>
           <CardContent style={{ padding: '24px' }}>
-            <h2 style={{ marginBottom: '20px', fontSize: '20px', fontWeight: '600', color: '#1C3D51' }}>
+            <h2 style={{ marginBottom: '20px', fontSize: '20px', fontWeight: '700', color: '#1C3D51', fontFamily: '"Architects Daughter", cursive' }}>
               Active Listings ({activeListings.length})
             </h2>
             {activeListings.length === 0 ? (
               <div className="text-center py-8">
                 <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600">No active listings</p>
+                <p className="text-black">No active listings</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="profile-product-grid">
                 {activeListings.map((product) => (
                   <ProductCard
                     key={product.id}
                     id={product.id}
                     title={product.title}
                     price={product.price}
+                    originalPrice={product.originalPrice}
                     location={product.location}
                     image={product.image}
                     condition={product.condition}

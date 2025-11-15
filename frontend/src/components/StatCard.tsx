@@ -24,7 +24,7 @@ export function StatCard({
           {icon}
         </div>
         <p className="stat-value">{value}</p>
-        <p className="text-sm text-muted">{label}</p>
+        <p className="text-sm text-black">{label}</p>
       </CardContent>
     </Card>
   );

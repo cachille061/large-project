@@ -6,12 +6,24 @@ import Product from "../models/Products";
 const computeSubtotal = (items: { price: number; qty: number }[]) =>
   items.reduce((s, i) => s + i.price * i.qty, 0);
 
+// Helper to serialize order with product IDs as strings
+const serializeOrder = (order: any) => {
+  const obj = order.toObject ? order.toObject() : order;
+  return {
+    ...obj,
+    items: obj.items.map((item: any) => ({
+      ...item,
+      product: item.product.toString()
+    }))
+  };
+};
+
 // GET /api/orders/current
 export const getCurrentOrders = async (req: Request, res: Response) => {
   const uid = req.user?.id;
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
   const orders = await Order.find({ user: uid, status: "CURRENT" }).sort({ updatedAt: -1 });
-  res.json(orders);
+  res.json({ orders: orders.map(serializeOrder) });
 };
 
 // GET /api/orders/current/search?q=term
@@ -22,7 +34,7 @@ export const searchCurrentOrders = async (req: Request, res: Response) => {
   const filter: any = { user: uid, status: "CURRENT" };
   if (q.trim()) filter.$text = { $search: q.trim() };
   const orders = await Order.find(filter).sort({ updatedAt: -1 });
-  res.json(orders);
+  res.json({ orders: orders.map(serializeOrder) });
 };
 
 // POST /api/orders/current  { productId }
@@ -59,7 +71,7 @@ export const buyProduct = async (req: Request, res: Response) => {
   order.subtotal = computeSubtotal(order.items);
   await order.save();
 
-  res.status(201).json(order);
+  res.status(201).json({ message: "Product added to cart", order });
 };
 
 // POST /api/orders/:orderId/cancel
@@ -72,7 +84,7 @@ export const cancelCurrentOrder = async (req: Request, res: Response) => {
 
   order.status = "CANCELED";
   await order.save();
-  res.json(order);
+  res.json({ message: "Order canceled", order });
 };
 
 // POST /api/orders/:orderId/checkout
@@ -107,15 +119,15 @@ export const checkoutOrder = async (req: Request, res: Response) => {
   session.endSession();
 
   if (!final) return res.status(409).json({ error: "Checkout failed" });
-  res.json(final);
+  res.json({ message: "Order completed", order: final });
 };
 
 // GET /api/orders/previous
 export const getPreviousOrders = async (req: Request, res: Response) => {
   const uid = req.user?.id;
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
-  const orders = await Order.find({ user: uid, status: "FULFILLED" }).sort({ updatedAt: -1 });
-  res.json(orders);
+  const orders = await Order.find({ user: uid, status: { $in: ["FULFILLED", "CANCELED"] } }).sort({ updatedAt: -1 });
+  res.json({ orders: orders.map(serializeOrder) });
 };
 
 // GET /api/orders/previous/search?q=term
@@ -123,10 +135,10 @@ export const searchPreviousOrders = async (req: Request, res: Response) => {
   const uid = req.user?.id;
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
   const q = (req.query.q as string) || "";
-  const filter: any = { user: uid, status: "FULFILLED" };
+  const filter: any = { user: uid, status: { $in: ["FULFILLED", "CANCELED"] } };
   if (q.trim()) filter.$text = { $search: q.trim() };
   const orders = await Order.find(filter).sort({ updatedAt: -1 });
-  res.json(orders);
+  res.json({ orders: orders.map(serializeOrder) });
 };
 
 // DELETE /api/orders/:orderId  (admin guard)

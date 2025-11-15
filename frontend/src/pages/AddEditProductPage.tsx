@@ -50,7 +50,7 @@ export function AddEditProductPage() {
       <main className="flex-1 p-6">
         <div className="max-w-4xl mx-auto text-center py-12">
           <h2 className="mb-2">Please Sign In</h2>
-          <p className="text-gray-600 mb-4">You need to sign in to list products</p>
+          <p className="text-black mb-4">You need to sign in to list products</p>
           <Button onClick={() => navigate("/login")}>Sign In</Button>
         </div>
       </main>
@@ -101,7 +101,9 @@ export function AddEditProductPage() {
 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>{isEdit ? "Edit Product" : "List New Product"}</CardTitle>
+            <CardTitle style={{ fontSize: '32px', fontWeight: '700', color: '#1C3D51', fontFamily: '"Architects Daughter", cursive' }}>
+              {isEdit ? "Edit Listing" : "List New Product"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -198,7 +200,7 @@ export function AddEditProductPage() {
 
               <div className="flex gap-3 pt-4">
                 <Button type="submit" disabled={loading} className="flex-1">
-                  {loading ? "Saving..." : isEdit ? "Update Product" : "List Product"}
+                  {loading ? "Saving..." : isEdit ? "Update" : "List Product"}
                 </Button>
                 <Button
                   type="button"

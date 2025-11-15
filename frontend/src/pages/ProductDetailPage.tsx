@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { useData } from "../contexts/DataContext";
+import { useData, Product } from "../contexts/DataContext";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { MapPin, ArrowLeft, ShoppingCart } from "lucide-react";
@@ -10,6 +10,9 @@ import { Alert, AlertDescription } from "../components/ui/alert";
 import { toast } from "sonner";
 import { SellerInfo } from "../components/SellerInfo";
 import { ProductDetails } from "../components/ProductDetails";
+import { productApi } from "../services/api";
+import { formatPrice } from "../utils/formatPrice";
+import { ProductCondition } from "../constants";
 
 export function ProductDetailPage() {
   const { productId } = useParams<{ productId: string }>();
@@ -17,10 +20,61 @@ export function ProductDetailPage() {
   const { products, createOrder } = useData();
   const navigate = useNavigate();
   const [purchasing, setPurchasing] = useState(false);
+  const [fetchedProduct, setFetchedProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const product = products.find((p) => p.id === productId);
+  // First try to find product in local state
+  const localProduct = products.find((p) => p.id === productId);
 
-  if (!product) {
+  // If not found locally, fetch from API
+  useEffect(() => {
+    if (!localProduct && productId) {
+      setLoading(true);
+      setError(null);
+      
+      productApi.getById(productId)
+        .then((response) => {
+          const p = response.product;
+          const transformedProduct: Product = {
+            id: p._id,
+            title: p.title,
+            price: formatPrice(p.price),
+            location: p.location || "Location not specified",
+            image: p.images?.[0] || "",
+            condition: mapCondition(p.condition),
+            description: p.description,
+            category: p.category,
+            sellerId: p.sellerId,
+            sellerName: p.sellerName || "Unknown Seller",
+            status: p.status === "available" ? "active" : p.status === "delisted" ? "delisted" : p.status,
+            createdAt: p.createdAt,
+          };
+          setFetchedProduct(transformedProduct);
+        })
+        .catch((err) => {
+          console.error("Error fetching product:", err);
+          setError(err.message || "Failed to load product");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [localProduct, productId]);
+
+  const product = localProduct || fetchedProduct;
+
+  if (loading) {
+    return (
+      <main className="container-page">
+        <div className="container-centered text-center" style={{ padding: '48px 0' }}>
+          <h2 className="text-heading-secondary">Loading...</h2>
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !product) {
     return (
       <main className="container-page">
         <div className="container-centered text-center" style={{ padding: '48px 0' }}>
@@ -90,7 +144,7 @@ export function ProductDetailPage() {
               <h2 style={{ marginBottom: '16px', fontSize: '24px', fontWeight: '600', color: '#333333' }}>{product.title}</h2>
             </div>
 
-            <div className="flex-center gap-sm text-muted text-sm" style={{ justifyContent: 'flex-start', marginBottom: '24px' }}>
+            <div className="flex-center gap-sm text-black text-sm" style={{ justifyContent: 'flex-start', marginBottom: '24px' }}>
               <MapPin style={{ width: '16px', height: '16px' }} />
               {product.location}
             </div>
@@ -144,12 +198,24 @@ export function ProductDetailPage() {
             {/* Description */}
             <div>
               <h3 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600', color: '#1C3D51' }}>Description</h3>
-              <p className="text-sm text-muted" style={{ lineHeight: '1.6' }}>{product.description}</p>
+              <p className="text-sm text-black" style={{ lineHeight: '1.6' }}>{product.description}</p>
             </div>
           </div>
         </div>
       </div>
     </main>
   );
+}
+
+// Helper function to map backend condition to frontend format
+function mapCondition(backendCondition: string): ProductCondition {
+  const conditionMap: Record<string, ProductCondition> = {
+    "new": "New",
+    "like-new": "Used - Like New",
+    "good": "Used - Good",
+    "fair": "Used - Fair",
+    "poor": "Used - Fair",
+  };
+  return conditionMap[backendCondition] || "Used - Good";
 }
 

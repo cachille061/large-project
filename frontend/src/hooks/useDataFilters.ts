@@ -10,9 +10,9 @@ export interface CategorizedOrders {
 
 export function useOrderManagement(orders: Order[]): CategorizedOrders {
   return useMemo(() => {
-    const pending = orders.filter((o) => o.status === "pending");
-    const completed = orders.filter((o) => o.status === "completed");
-    const cancelled = orders.filter((o) => o.status === "cancelled");
+    const pending = orders.filter((o) => o.status === "CURRENT");
+    const completed = orders.filter((o) => o.status === "FULFILLED");
+    const cancelled = orders.filter((o) => o.status === "CANCELED");
 
     return {
       all: orders,

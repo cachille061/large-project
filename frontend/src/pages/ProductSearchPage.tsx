@@ -43,14 +43,14 @@ export function ProductSearchPage() {
   return (
     <main className="container-page">
       <div className="container-centered">
-        <h2 className="text-heading-secondary">
+        <h2 className="text-heading-secondary" style={{ color: '#1C3D51', fontWeight: '700', fontFamily: '"Architects Daughter", cursive' }}>
           {searchQuery ? `Search results for "${searchQuery}"` : 'Browse & Filter Products'}
         </h2>
-        <p className="text-muted" style={{ marginBottom: '24px' }}>
+        <p style={{ color: '#000', marginBottom: '24px', fontSize: '18px', fontFamily: '"Architects Daughter", cursive', fontWeight: '600' }}>
           {categoryFilter !== "all" 
             ? `Showing ${filteredProducts.length} products in ${categoryFilter}` 
             : searchQuery 
-              ? `Found ${filteredProducts.length} products` 
+              ? `Found ${filteredProducts.length} result(s)` 
               : 'Search by keyword or filter by category and condition'}
         </p>
 
@@ -90,22 +90,16 @@ export function ProductSearchPage() {
           </div>
         </div>
 
-        {/* Results */}
-        <div style={{ marginBottom: '16px' }}>
-          <p className="text-muted text-sm">
-            {filteredProducts.length} {filteredProducts.length === 1 ? "result" : "results"} found
-          </p>
-        </div>
-
         {/* Products Grid */}
         {filteredProducts.length > 0 ? (
-          <div className="product-grid">
+          <div className="profile-product-grid">
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 id={product.id}
                 title={product.title}
                 price={product.price}
+                originalPrice={product.originalPrice}
                 location={product.location}
                 image={product.image}
                 condition={product.condition}
@@ -115,7 +109,7 @@ export function ProductSearchPage() {
           </div>
         ) : (
           <div className="text-center" style={{ padding: '48px 0' }}>
-            <p className="text-muted">No products match your search criteria</p>
+            <p className="text-black">No products match your search criteria</p>
           </div>
         )}
       </div>

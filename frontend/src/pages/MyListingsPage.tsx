@@ -23,7 +23,7 @@ import { toast } from "sonner";
 
 export function MyListingsPage() {
   const { user, isAuthenticated } = useAuth();
-  const { getProductsBySeller, getOrdersBySeller, updateProduct, deleteProduct } = useData();
+  const { products, orders, updateProduct, deleteProduct } = useData();
   const navigate = useNavigate();
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
@@ -32,23 +32,29 @@ export function MyListingsPage() {
       <main className="flex-1 p-6">
         <div className="max-w-4xl mx-auto text-center py-12">
           <h2 className="mb-2">Please Sign In</h2>
-          <p className="text-gray-600 mb-4">You need to sign in to manage your listings</p>
+          <p className="text-black mb-4">You need to sign in to manage your listings</p>
           <Button onClick={() => navigate("/login")}>Sign In</Button>
         </div>
       </main>
     );
   }
 
-  const myProducts = getProductsBySeller(user!.id);
-  const myOrders = getOrdersBySeller(user!.id);
+  const myProducts = products.filter((p) => p.sellerId === user!.id);
+  const myOrders = orders.filter((o) => o.items.some(item => item.sellerId === user!.id));
 
   const activeProducts = myProducts.filter((p) => p.status === "active");
   const soldProducts = myProducts.filter((p) => p.status === "sold");
+  const delistedProducts = myProducts.filter((p) => p.status === "delisted");
 
-  const handleToggleStatus = (productId: string, currentStatus: string) => {
-    const newStatus = currentStatus === "active" ? "delisted" : "active";
-    updateProduct(productId, { status: newStatus as any });
-    toast.success(`Product ${newStatus === "active" ? "listed" : "delisted"}`);
+  const handleToggleStatus = async (productId: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === "active" ? "delisted" : "active";
+      await updateProduct(productId, { status: newStatus as any });
+      toast.success(`Product ${newStatus === "active" ? "relisted" : "delisted"}`);
+    } catch (error) {
+      console.error("Error toggling product status:", error);
+      toast.error("Failed to update product status");
+    }
   };
 
   const handleDeleteProduct = () => {
@@ -64,8 +70,9 @@ export function MyListingsPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="mb-1">My Listings</h1>
-            <p className="text-sm text-gray-600">Manage your products and sales</p>
+            <h2 className="text-heading-secondary" style={{ color: '#1C3D51', fontWeight: '700', fontFamily: '"Architects Daughter", cursive' }}>
+              My Listings
+            </h2>
           </div>
           <Button 
             onClick={() => navigate("/sell")} 
@@ -79,29 +86,27 @@ export function MyListingsPage() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card className="shadow-md">
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 pt-4">
               <CardDescription>Active Listings</CardDescription>
               <CardTitle className="text-3xl">{activeProducts.length}</CardTitle>
             </CardHeader>
           </Card>
           <Card className="shadow-md">
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 pt-4">
+              <CardDescription>Delisted</CardDescription>
+              <CardTitle className="text-3xl">{delistedProducts.length}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card className="shadow-md">
+            <CardHeader className="pb-2 pt-4">
               <CardDescription>Sold Products</CardDescription>
               <CardTitle className="text-3xl">{soldProducts.length}</CardTitle>
             </CardHeader>
           </Card>
           <Card className="shadow-md">
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 pt-4">
               <CardDescription>Total Sales</CardDescription>
               <CardTitle className="text-3xl">{myOrders.length}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className="shadow-md">
-            <CardHeader className="pb-2">
-              <CardDescription>Pending Sales</CardDescription>
-              <CardTitle className="text-3xl">
-                {myOrders.filter((o) => o.status === "pending").length}
-              </CardTitle>
             </CardHeader>
           </Card>
         </div>
@@ -109,8 +114,8 @@ export function MyListingsPage() {
         {/* Tabs */}
         <Tabs defaultValue="products">
           <TabsList>
-            <TabsTrigger value="products">My Products</TabsTrigger>
-            <TabsTrigger value="sales">Sales</TabsTrigger>
+            <TabsTrigger value="products" className="hover:bg-gray-100 transition-colors">My Products</TabsTrigger>
+            <TabsTrigger value="sales" className="hover:bg-gray-100 transition-colors">Sales</TabsTrigger>
           </TabsList>
 
           <TabsContent value="products" className="mt-6">
@@ -118,7 +123,7 @@ export function MyListingsPage() {
               <Card className="shadow-md">
                 <CardContent className="text-center py-12">
                   <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-600 mb-4">You haven't listed any products yet</p>
+                  <p className="text-black mb-4">You haven't listed any products yet</p>
                   <Button className="primary-button" onClick={() => navigate("/sell")}>Create your first listing</Button>
                 </CardContent>
               </Card>
@@ -137,7 +142,7 @@ export function MyListingsPage() {
                           <div className="flex items-start justify-between mb-2">
                             <div>
                               <h3 className="mb-1">{product.title}</h3>
-                              <p className="text-gray-600">{product.price}</p>
+                              <p className="text-black">{product.price}</p>
                             </div>
                             <Badge
                               variant={
@@ -151,7 +156,7 @@ export function MyListingsPage() {
                               {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          <p className="text-sm text-black mb-3 line-clamp-2">
                             {product.description}
                           </p>
                           <div className="flex gap-2">
@@ -203,7 +208,7 @@ export function MyListingsPage() {
             {myOrders.length === 0 ? (
               <Card className="shadow-md">
                 <CardContent className="text-center py-12">
-                  <p className="text-gray-600">No sales yet</p>
+                  <p className="text-black">No sales yet</p>
                 </CardContent>
               </Card>
             ) : (
@@ -235,7 +240,7 @@ export function MyListingsPage() {
                           <TableCell>
                             <div>
                               <p>{order.buyerName}</p>
-                              <p className="text-xs text-gray-500">{order.buyerEmail}</p>
+                              <p className="text-xs text-black">{order.buyerEmail}</p>
                             </div>
                           </TableCell>
                           <TableCell>{order.productPrice}</TableCell>

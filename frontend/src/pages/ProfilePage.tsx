@@ -22,7 +22,7 @@ export function ProfilePage() {
       <main className="container-page" style={{ backgroundColor: '#F8F5F0' }}>
         <div className="container-centered text-center" style={{ padding: '48px 0' }}>
           <h2 className="text-heading-secondary">Please Sign In</h2>
-          <p className="text-muted">You need to sign in to view your profile</p>
+          <p className="text-black">You need to sign in to view your profile</p>
         </div>
       </main>
     );
@@ -113,7 +113,7 @@ export function ProfilePage() {
               </AvatarFallback>
             </Avatar>
             <div style={{ flex: 1 }}>
-              <h1 className="profile-name">
+              <h1 className="profile-name" style={{ fontFamily: '"Architects Daughter", cursive', fontWeight: '700' }}>
                 {user.name}
               </h1>
               <div className="profile-member-info">
@@ -144,7 +144,7 @@ export function ProfilePage() {
         {activeListings.length > 0 ? (
           <div>
             <div className="flex-between" style={{ marginBottom: '20px' }}>
-              <h2 className="profile-name" style={{ color: '#1C3D51', fontSize: '28px' }}>
+              <h2 className="profile-name" style={{ color: '#1C3D51', fontSize: '28px', fontFamily: '"Architects Daughter", cursive', fontWeight: '700' }}>
                 Current Listings
               </h2>
               <button
@@ -170,31 +170,45 @@ export function ProfilePage() {
                       decoding="async"
                       className="image-absolute"
                     />
+                  </div>
+                  <div style={{ padding: '16px', position: 'relative' }}>
+                    <h3 className="truncate-1" style={{ fontSize: '16px', fontWeight: '600', color: '#1C3D51', marginBottom: '8px' }}>
+                      {product.title}
+                    </h3>
+                    <div style={{ marginBottom: '8px' }}>
+                      {product.originalPrice && product.originalPrice !== product.price ? (
+                        <div>
+                          <span style={{ fontSize: '14px', fontWeight: '500', color: '#999', textDecoration: 'line-through', marginRight: '8px' }}>
+                            {product.originalPrice}
+                          </span>
+                          <span style={{ fontSize: '20px', fontWeight: '700', color: '#285570' }}>
+                            {product.price}
+                          </span>
+                        </div>
+                      ) : (
+                        <p style={{ fontSize: '20px', fontWeight: '700', color: '#285570', margin: 0 }}>
+                          {product.price}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-tiny text-muted truncate-1">
+                      {product.location}
+                    </p>
                     <Badge
                       style={{
                         position: 'absolute',
-                        top: '8px',
-                        left: '8px',
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        color: '#1C3D51',
+                        bottom: '16px',
+                        right: '16px',
+                        backgroundColor: '#285570',
+                        color: '#FFFFFF',
                         border: 'none',
-                        fontSize: '11px',
+                        fontSize: '12px',
                         fontWeight: '600',
+                        padding: '4px 10px',
                       }}
                     >
                       {product.condition}
                     </Badge>
-                  </div>
-                  <div style={{ padding: '16px' }}>
-                    <h3 className="truncate-1" style={{ fontSize: '16px', fontWeight: '600', color: '#1C3D51', marginBottom: '8px' }}>
-                      {product.title}
-                    </h3>
-                    <p style={{ fontSize: '20px', fontWeight: '700', color: '#285570', marginBottom: '8px' }}>
-                      {product.price}
-                    </p>
-                    <p className="text-tiny text-muted truncate-1">
-                      {product.location}
-                    </p>
                   </div>
                 </div>
               ))}

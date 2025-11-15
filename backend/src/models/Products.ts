@@ -4,8 +4,9 @@ export interface IProduct extends Document {
     title: string;
     description: string;
     price: number;
+    originalPrice?: number;
     condition: 'new' | 'like-new' | 'good' | 'fair' | 'poor';
-    status: 'available' | 'sold' | 'pending';
+    status: 'available' | 'sold' | 'pending' | 'delisted';
     category: string;
     images: string[];
     location?: string;
@@ -33,6 +34,10 @@ const productSchema = new Schema<IProduct>(
             required: [true, 'Price is required'],
             min: [0, 'Price cannot be negative'],
         },
+        originalPrice: {
+            type: Number,
+            min: [0, 'Price cannot be negative'],
+        },
         condition: {
             type: String,
             enum: {
@@ -44,7 +49,7 @@ const productSchema = new Schema<IProduct>(
         status: {
             type: String,
             enum: {
-                values: ['available', 'sold', 'pending'],
+                values: ['available', 'sold', 'pending', 'delisted'],
                 message: '{VALUE} is not a valid status',
             },
             default: 'available',

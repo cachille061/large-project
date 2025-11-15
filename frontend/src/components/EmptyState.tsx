@@ -26,7 +26,7 @@ export function EmptyState({
           {icon}
         </div>
         <h2 className="mb-2">{title}</h2>
-        <p className="text-gray-600 mb-4">{description}</p>
+        <p className="text-black mb-4">{description}</p>
         {actionLabel && onAction && (
           <Button onClick={onAction}>{actionLabel}</Button>
         )}

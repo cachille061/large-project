@@ -22,14 +22,12 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      const success = await login(email, password);
-      if (success) {
-        navigate("/");
-      } else {
-        setError("Invalid email or password");
-      }
-    } catch (err) {
-      setError("An error occurred. Please try again.");
+      await login(email, password);
+      // Small delay to ensure session is established before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
+      navigate("/");
+    } catch (err: any) {
+      setError(err.message || "An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -44,10 +42,10 @@ export function LoginPage() {
               <Cpu style={{ width: '28px', height: '28px', color: 'white' }} />
             </div>
           </div>
-          <CardTitle style={{ fontSize: '24px', fontWeight: 'bold', textAlign: 'center', marginBottom: '8px', color: '#1C3D51' }}>
+          <CardTitle style={{ fontSize: '32px', fontWeight: '700', textAlign: 'center', marginBottom: '8px', color: '#1C3D51', fontFamily: '"Architects Daughter", cursive' }}>
             Welcome back
           </CardTitle>
-          <CardDescription style={{ textAlign: 'center', fontSize: '14px', color: '#66655F' }}>
+          <CardDescription style={{ textAlign: 'center', fontSize: '18px', color: '#000', fontFamily: '"Architects Daughter", cursive', fontWeight: '600' }}>
             Sign in to your CoreMarket account
           </CardDescription>
         </CardHeader>

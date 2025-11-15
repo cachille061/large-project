@@ -30,10 +30,10 @@ export function HomePage() {
           }} className="animate-fade-in">
             <h2 style={{ 
               fontSize: '36px', 
-              fontWeight: '600', 
+              fontWeight: '700', 
               marginBottom: '12px', 
               color: '#1C3D51',
-              fontFamily: '"Dancing Script", "Segoe Script", cursive',
+              fontFamily: '"Architects Daughter", cursive',
               letterSpacing: '1px',
               lineHeight: '1.2',
               textShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)'
@@ -41,10 +41,10 @@ export function HomePage() {
               Featured Products
             </h2>
             <p style={{ 
-              fontSize: '18px', 
+              fontSize: '24px', 
               color: '#333333',
-              fontFamily: '"Trebuchet MS", "Segoe UI", sans-serif',
-              fontWeight: '400',
+              fontFamily: '"Architects Daughter", cursive',
+              fontWeight: '700',
               letterSpacing: '1px',
               textTransform: 'uppercase',
               textShadow: '0px 1px 2px rgba(0, 0, 0, 0.05)'
@@ -55,22 +55,19 @@ export function HomePage() {
 
           {/* Products grid with staggered animation */}
           {activeProducts.length > 0 ? (
-            <div className="product-grid">
-              {activeProducts.map((product, index) => (
-                <div
+            <div className="profile-product-grid">
+              {activeProducts.map((product) => (
+                <ProductCard
                   key={product.id}
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
-                  <ProductCard
-                    id={product.id}
-                    title={product.title}
-                    price={product.price}
-                    location={product.location}
-                    image={product.image}
-                    condition={product.condition}
-                    onClick={() => handleProductClick(product.id)}
-                  />
-                </div>
+                  id={product.id}
+                  title={product.title}
+                  price={product.price}
+                  originalPrice={product.originalPrice}
+                  location={product.location}
+                  image={product.image}
+                  condition={product.condition}
+                  onClick={() => handleProductClick(product.id)}
+                />
               ))}
             </div>
           ) : (

@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import Product from '../models/Products';
 import mongoose from 'mongoose';
+import { enrichProductsWithSellerInfo, enrichProductWithSellerInfo } from '../utils/userHelper';
 
 export class ProductController {
     // Create a new product listing
@@ -13,10 +14,13 @@ export class ProductController {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
 
-            const product = await Product.create({
+            const productData = {
                 ...req.body,
                 sellerId: userId,
-            });
+                originalPrice: req.body.price, // Set original price on creation
+            };
+
+            const product = await Product.create(productData);
 
             res.status(201).json({
                 message: 'Product created successfully',
@@ -34,7 +38,7 @@ export class ProductController {
             const {
                 page = 1,
                 limit = 20,
-                status = 'available',
+                status,
                 category,
                 minPrice,
                 maxPrice,
@@ -85,8 +89,11 @@ export class ProductController {
                 Product.countDocuments(filter),
             ]);
 
+            // Enrich products with seller information
+            const enrichedProducts = await enrichProductsWithSellerInfo(products);
+
             res.json({
-                products,
+                products: enrichedProducts,
                 pagination: {
                     page: pageNum,
                     limit: limitNum,
@@ -111,7 +118,10 @@ export class ProductController {
                 return res.status(404).json({ error: 'Product not found' });
             }
 
-            res.json({ product });
+            // Enrich product with seller information
+            const enrichedProduct = await enrichProductWithSellerInfo(product);
+
+            res.json({ product: enrichedProduct });
         } catch (error) {
             console.error('Error fetching product:', error);
             res.status(500).json({ error: 'Failed to fetch product' });
@@ -131,9 +141,12 @@ export class ProductController {
 
             const products = await Product.find(filter).sort({ createdAt: -1 });
 
+            // Enrich products with seller information
+            const enrichedProducts = await enrichProductsWithSellerInfo(products);
+
             res.json({
-                products,
-                count: products.length,
+                products: enrichedProducts,
+                count: enrichedProducts.length,
             });
         } catch (error) {
             console.error('Error fetching seller products:', error);
@@ -162,9 +175,13 @@ export class ProductController {
                 return res.status(403).json({ error: 'Forbidden: You can only update your own products' });
             }
 
+            // Preserve originalPrice - never allow it to be updated
+            const updateData = { ...req.body };
+            delete updateData.originalPrice;
+
             const updatedProduct = await Product.findByIdAndUpdate(
                 id,
-                { $set: req.body },
+                { $set: updateData },
                 { new: true, runValidators: true }
             );
 
