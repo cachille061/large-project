@@ -14,15 +14,26 @@ class ApiRequests {
     }
   }
 
-  Future<List<dynamic>> getAllProducts() async {
+  Future<List<dynamic>> getProducts({String? id}) async {
     final apiUrl = BACKEND_URL;
-    final url = Uri.parse('$apiUrl/api/products');
+    Uri url;
+    if (id == null) {
+      debugPrint("Adding a product");
+      url = Uri.parse('$apiUrl/api/products');
+    } else {
+      debugPrint("editing $id");
+      url = Uri.parse('$apiUrl/api/products/$id');
+    }
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       debugPrint('Success: $data');
-      return data["products"];
+      if (id == null) {
+        return data["products"];
+      } else {
+        return [data["product"]];
+      }
     } else {
       debugPrint('Error: ${response.statusCode}');
     }
@@ -74,6 +85,44 @@ class ApiRequests {
       debugPrint('Error: ${response.statusCode}');
       return [];
     }
+  }
+
+  Future<List<dynamic>> getMyProducts() async {
+    String sellerId = await getMyId();
+    final apiUrl = BACKEND_URL;
+    final url = Uri.parse('$apiUrl/api/products/seller/$sellerId');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      debugPrint('Success: $data');
+      return data["products"];
+    } else {
+      debugPrint('Error: ${response.statusCode}');
+    }
+    return [];
+  }
+
+  Future<(bool, String)> deleteProduct(String id) async {
+    final apiUrl = BACKEND_URL;
+    final url = Uri.parse('$apiUrl/api/products/$id');
+    final sessionToken = await storage.read(key: tokenKey);
+    final response = await http.delete(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'better-auth.session_token=$sessionToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      debugPrint('Success: $data');
+      return (true, 'Success: $data');
+    } else {
+      debugPrint('Error: ${response.statusCode}, ${response.body}');
+    }
+    return (false, 'Error: ${response.statusCode}');
   }
 
   Future<String> signUpWithEmail(String email, String password) async {
@@ -131,6 +180,25 @@ class ApiRequests {
     loggedIn = false;
   }
 
+  Future<(bool, dynamic)> getSession() async {
+    final apiUrl = BACKEND_URL;
+    final url = Uri.parse('$apiUrl/api/auth/get-session');
+    final sessionToken = await storage.read(key: tokenKey);
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'better-auth.session_token=$sessionToken',
+      },
+    );
+    if (response.statusCode == 200) {
+      return (true, jsonDecode(response.body));
+    } else {
+      return (false, jsonDecode(response.body));
+    }
+  }
+
   Future<void> initiateGoogleOAuth() async {
     final apiUrl = BACKEND_URL;
     final url = Uri.parse('${apiUrl ?? ''}/api/auth/google');
@@ -163,7 +231,7 @@ class ApiRequests {
     // Handle response as needed
   }
 
-  Future<(bool, String)> addProduct({
+  Future<(bool, String)> addEditProduct({
     required String title,
     required double price,
     required String description,
@@ -171,9 +239,21 @@ class ApiRequests {
     required String condition,
     required String location,
     String? imageUrl,
+    bool edit = false,
+    String? id,
   }) async {
     final apiUrl = BACKEND_URL;
-    final url = Uri.parse('$apiUrl/api/products');
+    Uri url;
+    if (!edit)
+      url = Uri.parse('$apiUrl/api/products');
+    else {
+      if (id == null) {
+        debugPrint("id was null in addEditProduct");
+        return (false, "id was null");
+      }
+      url = Uri.parse('$apiUrl/api/products/$id');
+    }
+
     final body = {
       'title': title,
       'description': description,
@@ -185,15 +265,27 @@ class ApiRequests {
 
     final sessionToken = await storage.read(key: tokenKey);
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': 'better-auth.session_token=$sessionToken',
-      },
-      body: jsonEncode(body),
-    );
-    if (response.statusCode == 201) {
+    http.Response response;
+    if (!edit) {
+      response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': 'better-auth.session_token=$sessionToken',
+        },
+        body: jsonEncode(body),
+      );
+    } else {
+      response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': 'better-auth.session_token=$sessionToken',
+        },
+        body: jsonEncode(body),
+      );
+    }
+    if (response.statusCode == 201 || response.statusCode == 200) {
       return (true, "Product added successfully: ${response.body}");
     } else {
       return (
@@ -201,5 +293,24 @@ class ApiRequests {
         "Failed to add product: ${response.body}\nheaders: ${response.request?.headers}\nrequest body $body\n",
       );
     }
+  }
+
+  Future<String> getMyId() async {
+    final sessionData = await getSession();
+    if (sessionData.$1 == false) {
+      debugPrint("Error: ${sessionData.toString()}");
+      return "";
+    }
+    return sessionData.$2["user"]["id"];
+  }
+
+  Future<bool> isSeller(String id) async {
+    String myId = await getMyId();
+    var product = (await getProducts(id: id))[0];
+    return myId == product["sellerId"];
+  }
+
+  Future<bool> buyProduct(String id) async {
+    return false;
   }
 }

@@ -3,14 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_app/main.dart';
 import 'package:flutter_app/api_requests.dart';
 
-class AddProductPage extends StatefulWidget {
-  const AddProductPage({super.key});
+class AddEditProductPage extends StatefulWidget {
+  final bool edit;
+  final String? id;
+  const AddEditProductPage({super.key, this.edit = false, this.id});
 
   @override
-  State<AddProductPage> createState() => AddProductPageState();
+  State<AddEditProductPage> createState() => AddEditProductPageState();
 }
 
-class AddProductPageState extends State<AddProductPage> {
+class AddEditProductPageState extends State<AddEditProductPage> {
   final productTitle = TextEditingController();
   final price = TextEditingController();
   final location = TextEditingController();
@@ -19,6 +21,7 @@ class AddProductPageState extends State<AddProductPage> {
   String? selectedCategory;
   String? selectedCondition;
   String errorText = "";
+  bool loading = false;
 
   @override
   void initState() {
@@ -38,6 +41,30 @@ class AddProductPageState extends State<AddProductPage> {
     imageURL.addListener(() {
       setState(() {});
     });
+    if (widget.edit) {
+      if (widget.id == null) {
+        debugPrint("didn't pass in ID to edit!");
+        return;
+      }
+      loading = true;
+      getProduct();
+    }
+  }
+
+  void getProduct() async {
+    try {
+      final product = (await ApiRequests().getProducts(id: widget.id))[0];
+      productTitle.text = product["title"];
+      price.text = product["price"].toString();
+      location.text = product["location"];
+      description.text = product["description"];
+      productTitle.text = product["title"];
+      selectedCondition = VALID_TO_DISPLAY_CONDITION[product["condition"]];
+      selectedCategory = product["category"];
+    } catch (error) {
+    } finally {
+      loading = false;
+    }
   }
 
   void _addProductButton() async {
@@ -67,13 +94,15 @@ class AddProductPageState extends State<AddProductPage> {
       errorText = "Price cannot be negative";
       return;
     }
-    final result = await ApiRequests().addProduct(
+    final result = await ApiRequests().addEditProduct(
       title: productTitle.text,
       price: double.parse(price.text),
       description: description.text,
       condition: DISPLAY_TO_VALID_CONDITION[selectedCondition] ?? '',
       category: selectedCategory ?? '',
       location: location.text,
+      edit: widget.edit,
+      id: widget.id,
     );
     debugPrint(result.$2);
     if (result.$1 == true) Navigator.pop(context);
@@ -86,124 +115,147 @@ class AddProductPageState extends State<AddProductPage> {
         title: const Text('AddProduct'),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-            child: TextFormField(
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Product Title *',
-              ),
-              controller: productTitle,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-            child: TextFormField(
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Price *',
-              ),
-              controller: price,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-            child: TextFormField(
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Location *',
-              ),
-              controller: location,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Category *',
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: selectedCategory,
-                  hint: Text('Select Category'),
-                  isExpanded: true,
-                  items: CATEGORIES.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedCategory = newValue;
-                    });
-                  },
+      body: loading
+          ? Center(child: Text("Loading..."))
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 16,
+                  ),
+                  child: TextFormField(
+                    decoration: const InputDecoration(
+                      border: UnderlineInputBorder(),
+                      labelText: 'Product Title *',
+                    ),
+                    controller: productTitle,
+                  ),
                 ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Condition *',
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: selectedCondition,
-                  hint: Text('Select Condition'),
-                  isExpanded: true,
-                  items: DISPLAY_CONDITIONS.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedCondition = newValue;
-                    });
-                  },
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 16,
+                  ),
+                  child: TextFormField(
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: const InputDecoration(
+                      border: UnderlineInputBorder(),
+                      labelText: 'Price *',
+                    ),
+                    controller: price,
+                  ),
                 ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-            child: TextFormField(
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Description *',
-              ),
-              controller: description,
-            ),
-          ),
-          SizedBox(
-            width: 250,
-            child: Padding(
-              padding: EdgeInsetsGeometry.all(20),
-              child: FloatingActionButton(
-                onPressed: () => _addProductButton(),
-                child: const Text(
-                  "List Product",
-                  style: TextStyle(fontSize: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 16,
+                  ),
+                  child: TextFormField(
+                    decoration: const InputDecoration(
+                      border: UnderlineInputBorder(),
+                      labelText: 'Location *',
+                    ),
+                    controller: location,
+                  ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 16,
+                  ),
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      border: UnderlineInputBorder(),
+                      labelText: 'Category *',
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: selectedCategory,
+                        hint: Text('Select Category'),
+                        isExpanded: true,
+                        items: CATEGORIES.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedCategory = newValue;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 16,
+                  ),
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      border: UnderlineInputBorder(),
+                      labelText: 'Condition *',
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: selectedCondition,
+                        hint: Text('Select Condition'),
+                        isExpanded: true,
+                        items: DISPLAY_CONDITIONS.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedCondition = newValue;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 16,
+                  ),
+                  child: TextFormField(
+                    decoration: const InputDecoration(
+                      border: UnderlineInputBorder(),
+                      labelText: 'Description *',
+                    ),
+                    controller: description,
+                  ),
+                ),
+                SizedBox(
+                  width: 250,
+                  child: Padding(
+                    padding: EdgeInsetsGeometry.all(20),
+                    child: FloatingActionButton(
+                      onPressed: () => _addProductButton(),
+                      child: const Text(
+                        "List Product",
+                        style: TextStyle(fontSize: 24),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 16,
+                  ),
+                  child: Text(errorText),
+                ),
+              ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-            child: Text(errorText),
-          ),
-        ],
-      ),
     );
   }
 

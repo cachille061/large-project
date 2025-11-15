@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/api_requests.dart';
 import 'package:flutter_app/main.dart';
 import 'package:flutter_app/add_product_page.dart';
 
@@ -9,40 +10,69 @@ class MyListingsPage extends StatefulWidget {
   State<MyListingsPage> createState() => _MyListingsPageState();
 }
 
-class _MyListingsPageState extends State<MyListingsPage> {
+class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
   String? productToDelete;
+  bool loading = false;
+  bool loadingError = false;
+
+  List<dynamic> myProducts = [];
+
+  void getProducts() async {
+    setState(() {
+      loading = true;
+      loadingError = false;
+    });
+
+    try {
+      final fetchedProducts = await ApiRequests().getMyProducts();
+      setState(() {
+        myProducts = fetchedProducts;
+        loading = false;
+      });
+    } catch (error) {
+      setState(() {
+        loadingError = true;
+        loading = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getProducts();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to RouteObserver
+    routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when returning to this page
+    getProducts();
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    void _addProductButton(BuildContext context) {
+    void addProductButton(BuildContext context) {
       Navigator.push(
         context,
         MaterialPageRoute<void>(
-          builder: (BuildContext context) => AddProductPage(),
+          builder: (BuildContext context) => AddEditProductPage(),
         ),
       );
     }
-
-    // TODO: Replace mock data with your providers / Firebase / API
-    final myProducts = <Map<String, dynamic>>[
-      {
-        "id": "1",
-        "title": "Laptop",
-        "price": "2100 AED",
-        "status": "active",
-        "description": "A great laptop",
-        "image": null,
-      },
-      {
-        "id": "2",
-        "title": "Phone",
-        "price": "500 AED",
-        "status": "sold",
-        "description": "Like new",
-        "image": null,
-      },
-    ];
 
     final myOrders = <Map<String, dynamic>>[];
     final activeProducts = myProducts
@@ -82,7 +112,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
                     backgroundColor: colors.tertiaryContainer,
                   ),
                   onPressed: () {
-                    _addProductButton(context);
+                    addProductButton(context);
                   },
                   icon: Icon(Icons.add, color: colors.onTertiaryContainer),
                   label: Text(
@@ -127,7 +157,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
                     Expanded(
                       child: TabBarView(
                         children: [
-                          _buildProductsTab(context, myProducts),
+                          _buildProductsTab(context),
                           _buildSalesTab(myOrders),
                         ],
                       ),
@@ -139,6 +169,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
           ],
         ),
       ),
+      bottomNavigationBar: NavBar(),
     );
   }
 
@@ -160,20 +191,52 @@ class _MyListingsPageState extends State<MyListingsPage> {
     );
   }
 
-  Widget _buildProductsTab(
-    BuildContext context,
-    List<Map<String, dynamic>> products,
-  ) {
-    if (products.isEmpty) {
-      return const Center(child: Text("You haven't listed any products yet"));
+  Widget _buildProductsTab(BuildContext context) {
+    if (myProducts.isEmpty) {
+      return const Center(child: Text("You haven't listed any myProducts yet"));
+    }
+
+    void editProductButton(BuildContext context, String id) {
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (BuildContext context) =>
+              AddEditProductPage(edit: true, id: id),
+        ),
+      );
+    }
+
+    void deleteProduct(id) async {
+      setState(() {
+        loading = true;
+        loadingError = false;
+      });
+      final api = ApiRequests();
+      await api.deleteProduct(id);
+      final updated = await api.getMyProducts();
+
+      try {
+        final fetchedProducts = await ApiRequests().getMyProducts();
+        setState(() {
+          myProducts = fetchedProducts;
+          loading = false;
+          myProducts = List.from(updated);
+        });
+      } catch (error) {
+        debugPrint(error.toString());
+        setState(() {
+          loadingError = true;
+          loading = false;
+        });
+      }
     }
 
     final colors = Theme.of(context).colorScheme;
 
     return ListView.builder(
-      itemCount: products.length,
+      itemCount: myProducts.length,
       itemBuilder: (context, i) {
-        final product = products[i];
+        final product = myProducts[i];
 
         return Card(
           child: Padding(
@@ -193,30 +256,35 @@ class _MyListingsPageState extends State<MyListingsPage> {
                 Expanded(
                   child: Row(
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product["title"],
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                          Text(
-                            product["price"],
-                            style: TextStyle(
-                              color: colors.onSecondaryContainer,
+                      Container(
+                        width: 130,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              product["title"],
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 18),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            product["description"],
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: colors.onSecondaryContainer,
+                            Text(
+                              "\$${product["price"].toString()}",
+                              style: TextStyle(
+                                color: colors.onSecondaryContainer,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 10),
-                        ],
+                            const SizedBox(height: 6),
+                            Text(
+                              product["description"],
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colors.onSecondaryContainer,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                        ),
                       ),
                       Spacer(),
                       Column(
@@ -225,7 +293,9 @@ class _MyListingsPageState extends State<MyListingsPage> {
                             width: 100,
                             height: 30,
                             child: OutlinedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                editProductButton(context, product["_id"]);
+                              },
                               child: const Text("Edit"),
                             ),
                           ),
@@ -236,7 +306,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
                             child: OutlinedButton(
                               onPressed: () {},
                               child: Text(
-                                product["status"] == "active"
+                                product["status"] == "available"
                                     ? "Delist"
                                     : "List",
                               ),
@@ -250,9 +320,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colors.errorContainer,
                               ),
-                              onPressed: () {
-                                setState(() => productToDelete = product["id"]);
-                              },
+                              onPressed: () => deleteProduct(product["_id"]),
                               child: Text(
                                 "Delete",
                                 style: TextStyle(

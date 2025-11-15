@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/listings.dart';
 import 'package:flutter_app/login_page.dart';
+import 'package:flutter_app/product_details.dart';
 import 'package:flutter_app/sign_up_page.dart';
 import 'package:flutter_app/api_requests.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app/add_product_page.dart';
+import 'package:http/http.dart';
 
 late String BACKEND_URL;
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 // This function can be changed to something else by the search menu
 Future<List> Function() searchFunc = () async {
-  return await ApiRequests().getAllProducts();
+  return await ApiRequests().getProducts();
 };
 const CATEGORIES = [
   "Computer Parts",
@@ -41,6 +43,14 @@ const Map<String, String> DISPLAY_TO_VALID_CONDITION = {
   "Used - Fair": 'fair',
   "Used - Poor": 'poor',
 };
+const Map<String, String> VALID_TO_DISPLAY_CONDITION = {
+  'new': 'New',
+  'like-new': 'Used - Like New',
+  'good': 'Used - Excellent',
+  'fair': 'Used - Fair',
+  'poor': 'Used - Poor',
+};
+
 Future<void> main() async {
   await dotenv.load();
   BACKEND_URL = (dotenv.env['API_URL'] ?? '');
@@ -106,6 +116,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       bottomNavigationBar: NavBar(
+        showSearch: true,
         onExitSearch: () => _productsListKey.currentState?.getProducts(),
       ),
     );
@@ -149,6 +160,15 @@ class _ProductsListState extends State<ProductsList> with RouteAware {
     super.initState();
     debugPrint("Initializing state");
     getProducts();
+  }
+
+  void _clickProduct(String id) {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => ProductDetailPage(productId: id),
+      ),
+    );
   }
 
   @override
@@ -198,42 +218,46 @@ class _ProductsListState extends State<ProductsList> with RouteAware {
                     color: Theme.of(context).colorScheme.secondaryContainer,
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product["title"] ?? "No title",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                child: InkWell(
+                  onTap: () => _clickProduct(product["_id"]),
+
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product["title"] ?? "No title",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      product["description"] ?? "No description",
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 14),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      "Location: ${product["location"] ?? "Unknown"}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSecondaryContainer,
+                      SizedBox(height: 4),
+                      Text(
+                        product["description"] ?? "No description",
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 14),
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      "Price: \$${product["price"] ?? 0}",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                      SizedBox(height: 4),
+                      Text(
+                        "Location: ${product["location"] ?? "Unknown"}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSecondaryContainer,
+                        ),
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 4),
+                      Text(
+                        "Price: \$${product["price"] ?? 0}",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
           ],
@@ -296,7 +320,7 @@ class _SearchMenuState extends State<SearchMenu> {
         maxPrice.text.isEmpty &&
         location.text.isEmpty) {
       searchFunc = () async {
-        return await ApiRequests().getAllProducts();
+        return await ApiRequests().getProducts();
       };
     } else {
       searchFunc = () async {
@@ -473,10 +497,17 @@ class _AccountMenuState extends State<AccountMenu> {
 
 class NavBar extends StatefulWidget {
   final Function onExitSearch;
-  const NavBar({super.key, required this.onExitSearch});
+  final bool showSearch;
+  const NavBar({
+    super.key,
+    this.showSearch = false,
+    this.onExitSearch = _emptyFunc,
+  });
 
   @override
   State<NavBar> createState() => _NavBarState();
+
+  static _emptyFunc() {}
 }
 
 class _NavBarState extends State<NavBar> {
@@ -503,7 +534,7 @@ class _NavBarState extends State<NavBar> {
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (BuildContext context) => AddProductPage(),
+        builder: (BuildContext context) => AddEditProductPage(),
       ),
     );
   }
@@ -529,7 +560,7 @@ class _NavBarState extends State<NavBar> {
     final ColorScheme colors = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: EdgeInsets.all(5),
+      padding: EdgeInsets.all(10),
       child: Container(
         height: 40,
         decoration: BoxDecoration(
@@ -539,11 +570,12 @@ class _NavBarState extends State<NavBar> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            IconButton(
-              icon: Icon(Icons.search),
-              color: colors.onPrimaryContainer,
-              onPressed: () => {_searchButton(context)},
-            ),
+            if (widget.showSearch)
+              IconButton(
+                icon: Icon(Icons.search),
+                color: colors.onPrimaryContainer,
+                onPressed: () => {_searchButton(context)},
+              ),
             IconButton(
               icon: Icon(Icons.home),
               color: colors.onPrimaryContainer,
