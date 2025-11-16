@@ -11,14 +11,14 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
-    outDir: 'build',
-    // Enable code splitting and optimize chunks
-    rollupOptions: {
+    outdir: 'build',
+    // enable code splitting and optimize chunks
+    rollupoptions: {
       output: {
-        manualChunks: (id) => {
-          // Split node_modules into separate chunks
+        manualchunks: (id) => {
+          // split node_modules into separate chunks
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
               return 'react-vendor';
             }
             if (id.includes('@radix-ui')) {
@@ -35,7 +35,7 @@ export default defineConfig({
     // Warn on large chunks
     chunkSizeWarningLimit: 500,
     // Enable minification
-    minify: 'terser',
+    minify: false,
     terserOptions: {
       compress: {
         drop_console: true, // Remove console.logs in production
