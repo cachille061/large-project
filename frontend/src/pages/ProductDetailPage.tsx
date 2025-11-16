@@ -172,7 +172,11 @@ export function ProductDetailPage() {
             )}
 
             {/* Seller Info */}
-            <SellerInfo sellerId={product.sellerId} sellerName={product.sellerName} />
+            <SellerInfo 
+              sellerId={product.sellerId} 
+              sellerName={product.sellerName} 
+              sellerProfilePicture={product.sellerProfilePicture}
+            />
 
             {/* Details */}
             <ProductDetails

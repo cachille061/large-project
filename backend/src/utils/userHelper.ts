@@ -140,6 +140,7 @@ export const enrichProductsWithSellerInfo = async (products: any[]) => {
             location: productObj.location,
             sellerId: productObj.sellerId,
             sellerName: seller?.name || seller?.email || 'Unknown Seller',
+            sellerProfilePicture: seller?.image,
             createdAt: productObj.createdAt,
             updatedAt: productObj.updatedAt,
         };
@@ -170,6 +171,7 @@ export const enrichProductWithSellerInfo = async (product: any) => {
         location: productObj.location,
         sellerId: productObj.sellerId,
         sellerName: seller?.name || seller?.email || 'Unknown Seller',
+        sellerProfilePicture: seller?.image,
         createdAt: productObj.createdAt,
         updatedAt: productObj.updatedAt,
     };

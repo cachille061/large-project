@@ -51,7 +51,7 @@ export const ProductCard = memo(function ProductCard({
         <div style={{ marginBottom: '8px' }}>
           {originalPrice && originalPrice !== price ? (
             <div>
-              <span style={{ fontSize: '14px', fontWeight: '500', color: '#999', textDecoration: 'line-through', marginRight: '8px' }}>
+              <span style={{ fontSize: '14px', fontWeight: '500', color: '#66655F', textDecoration: 'line-through', marginRight: '8px' }}>
                 {originalPrice}
               </span>
               <span style={{ fontSize: '20px', fontWeight: '700', color: '#285570' }}>

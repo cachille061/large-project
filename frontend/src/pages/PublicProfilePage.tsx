@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useData } from "../contexts/DataContext";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Package, Calendar, ArrowLeft } from "lucide-react";
@@ -15,7 +15,7 @@ export function PublicProfilePage() {
   // Find seller by checking products
   const sellerProducts = getProductsBySeller(userId || "");
   const seller = sellerProducts.length > 0 
-    ? { id: userId!, name: sellerProducts[0].sellerName }
+    ? { id: userId!, name: sellerProducts[0].sellerName, profilePicture: sellerProducts[0].sellerProfilePicture }
     : null;
 
   if (!seller) {
@@ -70,6 +70,9 @@ export function PublicProfilePage() {
           {/* Profile Info */}
           <div className="profile-info">
             <Avatar className="profile-avatar">
+              {seller.profilePicture ? (
+                <AvatarImage src={seller.profilePicture} alt={seller.name} style={{ objectFit: 'cover' }} />
+              ) : null}
               <AvatarFallback className="profile-avatar-fallback">
                 {seller.name.charAt(0)}
               </AvatarFallback>

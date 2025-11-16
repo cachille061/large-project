@@ -45,6 +45,7 @@ export const transformProduct = (p: any): Product => {
     category: p.category,
     sellerId: p.sellerId,
     sellerName: p.sellerName || "Unknown Seller",
+    sellerProfilePicture: p.sellerProfilePicture,
     status: mapStatus(p.status),
     createdAt: p.createdAt,
   };
