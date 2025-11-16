@@ -1,153 +1,70 @@
 /**
- * COMPONENT MAPPINGS
- * Maps semantic color tokens to UI components with states
+ * COMPONENT-SPECIFIC MAPPINGS
+ * Maps design system tokens to specific UI components
  */
 
 /* ==================== BUTTONS ==================== */
 
-/* Primary Button */
 .btn-primary {
   background-color: var(--color-primary-500);
   color: var(--color-text-inverse);
-  border: 1px solid var(--color-primary-600);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
+  border: none;
 }
 
 .btn-primary:hover {
   background-color: var(--color-primary-600);
-  border-color: var(--color-primary-700);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
 }
 
 .btn-primary:active {
   background-color: var(--color-primary-700);
-  box-shadow: var(--shadow-inner);
-  transform: translateY(0);
 }
 
-.btn-primary:focus-visible {
-  outline: 2px solid var(--color-primary-500);
-  outline-offset: 2px;
-}
-
-.btn-primary:disabled {
-  background-color: var(--color-disabled);
-  color: var(--color-disabled-text);
-  border-color: var(--color-border-subtle);
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-/* Secondary Button */
 .btn-secondary {
   background-color: var(--color-surface);
-  color: var(--color-primary-600);
+  color: var(--color-primary-500);
   border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
+  background-color: var(--color-muted);
+  border-color: var(--color-primary-500);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-primary-500);
+  border: 2px solid var(--color-primary-500);
+}
+
+.btn-outline:hover {
   background-color: var(--color-primary-50);
-  border-color: var(--color-primary-400);
-  color: var(--color-primary-700);
-  box-shadow: var(--shadow-md);
 }
 
-.btn-secondary:active {
-  background-color: var(--color-primary-100);
-  border-color: var(--color-primary-600);
-}
-
-.btn-secondary:focus-visible {
-  outline: 2px solid var(--color-primary-500);
-  outline-offset: 2px;
-}
-
-/* Accent Button */
-.btn-accent {
-  background-color: var(--color-accent-500);
-  color: var(--color-text-inverse);
-  border: 1px solid var(--color-accent-600);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
-}
-
-.btn-accent:hover {
-  background-color: var(--color-accent-600);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
-
-.btn-accent:active {
-  background-color: var(--color-accent-700);
-  transform: translateY(0);
-}
-
-/* Ghost Button */
 .btn-ghost {
   background-color: transparent;
-  color: var(--color-primary-600);
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
+  color: var(--color-text-primary);
+  border: none;
 }
 
 .btn-ghost:hover {
-  background-color: var(--color-primary-50);
-  color: var(--color-primary-700);
+  background-color: var(--color-muted);
 }
 
-.btn-ghost:active {
-  background-color: var(--color-primary-100);
-}
-
-/* Danger Button */
 .btn-danger {
   background-color: var(--color-danger-500);
   color: var(--color-text-inverse);
-  border: 1px solid var(--color-danger-600);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
+  border: none;
 }
 
 .btn-danger:hover {
   background-color: var(--color-danger-600);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
 }
 
-.btn-danger:active {
-  background-color: var(--color-danger-700);
-  transform: translateY(0);
-}
-
-/* ==================== LINKS ==================== */
-
-.link {
-  color: var(--color-primary-600);
-  text-decoration: none;
-  transition: color 0.2s ease;
-  position: relative;
-}
-
-.link:hover {
-  color: var(--color-primary-700);
-  text-decoration: underline;
-  text-decoration-color: var(--color-primary-400);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
-}
-
-.link:active {
-  color: var(--color-primary-800);
-}
-
-.link:focus-visible {
-  outline: 2px solid var(--color-primary-500);
-  outline-offset: 2px;
-  border-radius: 2px;
+.btn-disabled {
+  background-color: var(--color-disabled);
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* ==================== CARDS ==================== */
@@ -155,83 +72,37 @@
 .card {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow: var(--shadow-sm);
-  transition: all 0.3s ease;
 }
 
 .card:hover {
-  border-color: var(--color-border);
   box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
 }
 
-.card-interactive:hover {
-  border-color: var(--color-primary-300);
+.card-elevated {
+  background-color: var(--color-surface);
+  border: none;
+  box-shadow: var(--shadow-md);
+}
+
+.card-elevated:hover {
   box-shadow: var(--shadow-lg);
 }
 
-.card-emphasis {
-  background-color: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-}
-
-.card-muted {
-  background-color: var(--color-muted);
-  border: 1px solid var(--color-border-subtle);
-}
-
-/* ==================== NAVBAR ==================== */
-
-.navbar {
+.card-outlined {
   background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border-subtle);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(10px);
-  background-color: rgba(255, 255, 255, 0.95);
-}
-
-.theme-dark .navbar {
-  background-color: rgba(26, 33, 41, 0.95);
-}
-
-.navbar-link {
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  transition: color 0.2s ease;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-}
-
-.navbar-link:hover {
-  color: var(--color-primary-600);
-  background-color: var(--color-primary-50);
-}
-
-.navbar-link.active {
-  color: var(--color-primary-700);
-  background-color: var(--color-primary-100);
-  font-weight: 600;
+  border: 2px solid var(--color-border-emphasis);
 }
 
 /* ==================== INPUTS ==================== */
 
 .input {
   background-color: var(--color-surface);
-  color: var(--color-text-primary);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-sm);
-}
-
-.input::placeholder {
-  color: var(--color-text-subtle);
-}
-
-.input:hover {
-  border-color: var(--color-primary-400);
+  color: var(--color-text-primary);
+  border-radius: 6px;
+  padding: 8px 12px;
 }
 
 .input:focus {
@@ -244,7 +115,6 @@
   background-color: var(--color-disabled);
   color: var(--color-disabled-text);
   cursor: not-allowed;
-  border-color: var(--color-border-subtle);
 }
 
 .input-error {
@@ -252,123 +122,18 @@
 }
 
 .input-error:focus {
-  border-color: var(--color-danger-500);
   box-shadow: 0 0 0 3px rgba(216, 69, 69, 0.1);
 }
 
-.input-success {
-  border-color: var(--color-success-500);
-}
-
-/* ==================== SELECT ==================== */
-
-.select {
-  background-color: var(--color-surface);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 0.5rem 2rem 0.5rem 0.75rem;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-}
-
-.select:hover {
-  border-color: var(--color-primary-400);
-}
-
-.select:focus {
-  outline: none;
-  border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px rgba(40, 85, 112, 0.1);
-}
-
-/* ==================== TEXTAREA ==================== */
-
-.textarea {
-  background-color: var(--color-surface);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 0.75rem;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-sm);
-  resize: vertical;
-}
-
-.textarea::placeholder {
-  color: var(--color-text-subtle);
-}
-
-.textarea:hover {
-  border-color: var(--color-primary-400);
-}
-
-.textarea:focus {
-  outline: none;
-  border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px rgba(40, 85, 112, 0.1);
-}
-
-/* ==================== CHECKBOX & RADIO ==================== */
-
-.checkbox,
-.radio {
-  border: 2px solid var(--color-border);
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.checkbox:hover,
-.radio:hover {
-  border-color: var(--color-primary-400);
-}
-
-.checkbox:checked,
-.radio:checked {
-  background-color: var(--color-primary-500);
-  border-color: var(--color-primary-500);
-}
-
-.checkbox:focus-visible,
-.radio:focus-visible {
-  outline: 2px solid var(--color-primary-500);
-  outline-offset: 2px;
-}
-
-/* ==================== SWITCH ==================== */
-
-.switch {
-  background-color: var(--color-neutral-300);
-  transition: background-color 0.2s ease;
-}
-
-.switch:hover {
-  background-color: var(--color-neutral-400);
-}
-
-.switch[data-state="checked"] {
-  background-color: var(--color-primary-500);
-}
-
-.switch[data-state="checked"]:hover {
-  background-color: var(--color-primary-600);
-}
-
-/* ==================== BADGE ==================== */
+/* ==================== BADGES ==================== */
 
 .badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 500;
   display: inline-flex;
   align-items: center;
-}
-
-.badge-default {
-  background-color: var(--color-neutral-200);
-  color: var(--color-text-primary);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .badge-primary {
@@ -391,23 +156,23 @@
   color: var(--color-danger-700);
 }
 
-.badge-accent {
-  background-color: var(--color-accent-100);
-  color: var(--color-accent-700);
+.badge-neutral {
+  background-color: var(--color-neutral-200);
+  color: var(--color-neutral-700);
 }
 
-/* ==================== ALERT ==================== */
+/* ==================== ALERTS ==================== */
 
 .alert {
-  padding: 1rem;
+  padding: 16px;
   border-radius: 8px;
   border-left: 4px solid;
 }
 
 .alert-info {
-  background-color: var(--color-primary-50);
-  border-color: var(--color-primary-500);
-  color: var(--color-primary-900);
+  background-color: var(--color-info-50);
+  border-color: var(--color-info-500);
+  color: var(--color-info-900);
 }
 
 .alert-success {
@@ -428,46 +193,57 @@
   color: var(--color-danger-900);
 }
 
-/* ==================== TOOLTIP ==================== */
+/* ==================== NAVIGATION ==================== */
 
-.tooltip {
-  background-color: var(--color-neutral-800);
-  color: var(--color-text-inverse);
-  padding: 0.5rem 0.75rem;
+.nav-link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  padding: 8px 16px;
   border-radius: 6px;
-  font-size: 0.875rem;
-  box-shadow: var(--shadow-lg);
-  z-index: 50;
+  transition: all 0.2s ease;
 }
 
-/* ==================== DROPDOWN ==================== */
-
-.dropdown-content {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 8px;
-  box-shadow: var(--shadow-lg);
-  padding: 0.25rem;
-}
-
-.dropdown-item {
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+.nav-link:hover {
+  background-color: var(--color-muted);
   color: var(--color-text-primary);
-  transition: all 0.15s ease;
-  cursor: pointer;
 }
 
-.dropdown-item:hover {
+.nav-link-active {
   background-color: var(--color-primary-50);
   color: var(--color-primary-700);
+  font-weight: 600;
 }
 
-.dropdown-item:active {
-  background-color: var(--color-primary-100);
+/* ==================== TABLES ==================== */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-/* ==================== MODAL / DIALOG ==================== */
+.table thead {
+  background-color: var(--color-muted);
+}
+
+.table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-primary);
+}
+
+.table tbody tr:hover {
+  background-color: var(--color-muted);
+}
+
+/* ==================== MODALS ==================== */
 
 .modal-overlay {
   background-color: var(--color-overlay);
@@ -476,62 +252,101 @@
 
 .modal-content {
   background-color: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
   border-radius: 12px;
-  box-shadow: var(--shadow-2xl);
+  box-shadow: var(--shadow-xl);
+}
+
+/* ==================== TOOLTIPS ==================== */
+
+.tooltip {
+  background-color: var(--color-neutral-800);
+  color: var(--color-text-inverse);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  box-shadow: var(--shadow-md);
+}
+
+/* ==================== DROPDOWNS ==================== */
+
+.dropdown-menu {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+}
+
+.dropdown-item {
+  padding: 10px 16px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.dropdown-item:hover {
+  background-color: var(--color-muted);
+}
+
+.dropdown-item-active {
+  background-color: var(--color-primary-50);
+  color: var(--color-primary-700);
 }
 
 /* ==================== TABS ==================== */
 
-.tabs-list {
-  background-color: var(--color-muted);
-  border-radius: 8px;
-  padding: 0.25rem;
-  display: inline-flex;
-}
-
-.tabs-trigger {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+.tab {
+  padding: 12px 24px;
   color: var(--color-text-secondary);
-  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.tabs-trigger:hover {
+.tab:hover {
   color: var(--color-text-primary);
-  background-color: var(--color-surface);
+  background-color: var(--color-muted);
 }
 
-.tabs-trigger[data-state="active"] {
-  background-color: var(--color-surface);
+.tab-active {
   color: var(--color-primary-700);
-  box-shadow: var(--shadow-sm);
+  border-bottom-color: var(--color-primary-500);
   font-weight: 600;
 }
 
-/* ==================== PROGRESS BAR ==================== */
+/* ==================== PROGRESS BARS ==================== */
 
-.progress {
+.progress-bar {
   background-color: var(--color-neutral-200);
-  border-radius: 9999px;
+  border-radius: 8px;
   overflow: hidden;
   height: 8px;
 }
 
-.progress-indicator {
+.progress-fill {
   background-color: var(--color-primary-500);
   height: 100%;
-  transition: transform 0.3s ease;
+  transition: width 0.3s ease;
 }
 
-/* ==================== SKELETON LOADER ==================== */
+.progress-fill-success {
+  background-color: var(--color-success-500);
+}
+
+.progress-fill-warning {
+  background-color: var(--color-warning-500);
+}
+
+.progress-fill-danger {
+  background-color: var(--color-danger-500);
+}
+
+/* ==================== SKELETON LOADERS ==================== */
 
 .skeleton {
   background: linear-gradient(
     90deg,
     var(--color-neutral-200) 25%,
-    var(--color-neutral-100) 50%,
+    var(--color-neutral-300) 50%,
     var(--color-neutral-200) 75%
   );
   background-size: 200% 100%;
@@ -548,12 +363,46 @@
   }
 }
 
-/* ==================== SEPARATOR ==================== */
+/* ==================== DIVIDERS ==================== */
 
-.separator {
+.divider {
+  height: 1px;
   background-color: var(--color-border-subtle);
+  margin: 16px 0;
 }
 
-.separator-emphasis {
-  background-color: var(--color-border);
+.divider-vertical {
+  width: 1px;
+  height: 100%;
+  background-color: var(--color-border-subtle);
+  margin: 0 16px;
+}
+
+/* ==================== CHIPS ==================== */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  background-color: var(--color-neutral-200);
+  color: var(--color-text-primary);
+}
+
+.chip-removable {
+  padding-right: 8px;
+}
+
+.chip-remove-btn {
+  margin-left: 6px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.chip-remove-btn:hover {
+  color: var(--color-text-primary);
 }

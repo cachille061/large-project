@@ -22,10 +22,9 @@ import { EmptyState } from "../components/EmptyState";
 
 export function OrdersPage() {
   const { user, isAuthenticated } = useAuth();
-  const { getOrdersByBuyer, cancelOrder, completeOrder } = useData();
+  const { getOrdersByBuyer, cancelOrder } = useData();
   const navigate = useNavigate();
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
-  const [orderToCheckout, setOrderToCheckout] = useState<string | null>(null);
 
   if (!isAuthenticated) {
     return (
@@ -52,16 +51,8 @@ export function OrdersPage() {
     }
   };
 
-  const handleCheckoutOrder = async () => {
-    if (orderToCheckout) {
-      try {
-        await completeOrder(orderToCheckout);
-        toast.success("Order completed successfully!");
-        setOrderToCheckout(null);
-      } catch (error) {
-        toast.error("Failed to checkout. Please try again.");
-      }
-    }
+  const handleCheckoutOrder = (orderId: string) => {
+    navigate(`/checkout/${orderId}`);
   };
 
   return (
@@ -104,7 +95,7 @@ export function OrdersPage() {
                     order={order}
                     onViewProduct={(productId) => navigate(`/product/${productId}`)}
                     onCancelOrder={setOrderToCancel}
-                    onCheckoutOrder={setOrderToCheckout}
+                    onCheckoutOrder={handleCheckoutOrder}
                     showActions={true}
                   />
                 ))}
@@ -126,7 +117,7 @@ export function OrdersPage() {
                       order={order}
                       onViewProduct={(productId) => navigate(`/product/${productId}`)}
                       onCancelOrder={setOrderToCancel}
-                      onCheckoutOrder={setOrderToCheckout}
+                      onCheckoutOrder={handleCheckoutOrder}
                       showActions={true}
                     />
                   ))}
@@ -187,24 +178,9 @@ export function OrdersPage() {
               Are you sure you want to cancel this order? The product will become available again.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="justify-center sm:justify-center">
             <AlertDialogCancel>Keep Order</AlertDialogCancel>
             <AlertDialogAction onClick={handleCancelOrder}>Cancel Order</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={!!orderToCheckout} onOpenChange={() => setOrderToCheckout(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Complete Order</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to checkout? This will mark the products as sold and complete your purchase.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Go Back</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCheckoutOrder}>Complete Purchase</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

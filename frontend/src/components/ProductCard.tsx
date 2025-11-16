@@ -1,4 +1,5 @@
 import { Badge } from "./ui/badge";
+import { memo } from "react";
 
 interface ProductCardProps {
   id: string;
@@ -11,7 +12,7 @@ interface ProductCardProps {
   onClick?: () => void;
 }
 
-export function ProductCard({
+export const ProductCard = memo(function ProductCard({
   title,
   price,
   originalPrice,
@@ -23,6 +24,15 @@ export function ProductCard({
   return (
     <div
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View ${title} - ${price} in ${location}`}
       className="profile-product-card"
     >
       <div className="image-container">
@@ -77,4 +87,6 @@ export function ProductCard({
       </div>
     </div>
   );
-}
+});
+
+ProductCard.displayName = 'ProductCard';

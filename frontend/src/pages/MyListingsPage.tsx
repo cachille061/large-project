@@ -103,21 +103,10 @@ export function MyListingsPage() {
               <CardTitle className="text-3xl">{soldProducts.length}</CardTitle>
             </CardHeader>
           </Card>
-          <Card className="shadow-md">
-            <CardHeader className="pb-2 pt-4">
-              <CardDescription>Total Sales</CardDescription>
-              <CardTitle className="text-3xl">{myOrders.length}</CardTitle>
-            </CardHeader>
-          </Card>
         </div>
 
         {/* Tabs */}
         <Tabs defaultValue="products">
-          <TabsList>
-            <TabsTrigger value="products" className="hover:bg-gray-100 transition-colors">My Products</TabsTrigger>
-            <TabsTrigger value="sales" className="hover:bg-gray-100 transition-colors">Sales</TabsTrigger>
-          </TabsList>
-
           <TabsContent value="products" className="mt-6">
             {myProducts.length === 0 ? (
               <Card className="shadow-md">
@@ -129,16 +118,22 @@ export function MyListingsPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 gap-4">
-                {myProducts.map((product) => (
+                {myProducts
+                  .sort((a, b) => {
+                    const statusOrder = { active: 0, delisted: 1, sold: 2 };
+                    return statusOrder[a.status] - statusOrder[b.status];
+                  })
+                  .map((product) => (
                   <Card key={product.id} className="shadow-md">
                     <CardContent className="p-4">
                       <div className="flex gap-4">
-                        <ImageWithFallback
-                          src={product.image}
-                          alt={product.title}
-                          className="w-24 h-24 object-cover rounded"
-                        />
-                        <div className="flex-1">
+                        <div className="listing-card-image-container">
+                          <ImageWithFallback
+                            src={product.image}
+                            alt={product.title}
+                          />
+                        </div>
+                        <div className="flex-1" style={{ minWidth: 0 }}>
                           <div className="flex items-start justify-between mb-2">
                             <div>
                               <h3 className="mb-1">{product.title}</h3>
@@ -160,40 +155,51 @@ export function MyListingsPage() {
                             {product.description}
                           </p>
                           <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => navigate(`/edit/${product.id}`)}
-                            >
-                              <Edit className="w-4 h-4 mr-1" />
-                              Edit
-                            </Button>
-                            {product.status !== "sold" && (
+                            {product.status === "sold" ? (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleToggleStatus(product.id, product.status)}
+                                onClick={() => navigate(`/product/${product.id}`)}
                               >
-                                {product.status === "active" ? (
-                                  <>
-                                    <EyeOff className="w-4 h-4 mr-1" />
-                                    Delist
-                                  </>
-                                ) : (
-                                  <>
-                                    <Eye className="w-4 h-4 mr-1" />
-                                    List
-                                  </>
-                                )}
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
                               </Button>
+                            ) : (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => navigate(`/edit/${product.id}`)}
+                                >
+                                  <Edit className="w-4 h-4 mr-1" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleToggleStatus(product.id, product.status)}
+                                >
+                                  {product.status === "active" ? (
+                                    <>
+                                      <EyeOff className="w-4 h-4 mr-1" />
+                                      Delist
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Eye className="w-4 h-4 mr-1" />
+                                      List
+                                    </>
+                                  )}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => setProductToDelete(product.id)}
+                                >
+                                  Delete
+                                </Button>
+                              </>
                             )}
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => setProductToDelete(product.id)}
-                            >
-                              Delete
-                            </Button>
                           </div>
                         </div>
                       </div>
@@ -229,11 +235,12 @@ export function MyListingsPage() {
                         <TableRow key={order.id}>
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <ImageWithFallback
-                                src={order.productImage}
-                                alt={order.productTitle}
-                                className="w-12 h-12 object-cover rounded"
-                              />
+                              <div style={{ width: '48px', height: '48px', minWidth: '48px', minHeight: '48px', overflow: 'hidden', borderRadius: '6px', flexShrink: 0 }}>
+                                <ImageWithFallback
+                                  src={order.productImage}
+                                  alt={order.productTitle}
+                                />
+                              </div>
                               <span>{order.productTitle}</span>
                             </div>
                           </TableCell>

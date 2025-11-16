@@ -2,15 +2,19 @@ import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
 import { useData } from "../contexts/DataContext";
 import { ProductCard } from "../components/ProductCard";
+import { ProductCardSkeleton } from "../components/ProductCardSkeleton";
 import { useActiveProducts, useSortedProducts } from "../hooks";
 
 export function HomePage() {
-  const { products } = useData();
+  const { products, isLoading } = useData();
   const navigate = useNavigate();
 
   // Get active products sorted by newest first
   const activeProductsUnsorted = useActiveProducts(products);
-  const activeProducts = useSortedProducts(activeProductsUnsorted);
+  const sortedProducts = useSortedProducts(activeProductsUnsorted);
+  
+  // Limit initial render to first 12 products for performance
+  const activeProducts = sortedProducts.slice(0, 12);
 
   // Navigate to product detail page
   const handleProductClick = useCallback((productId: string) => {
@@ -49,12 +53,18 @@ export function HomePage() {
               textTransform: 'uppercase',
               textShadow: '0px 1px 2px rgba(0, 0, 0, 0.05)'
             }} className="animate-slide-right">
-              Latest Listings In Florida
+              Today's Picks
             </p>
           </div>
 
           {/* Products grid with staggered animation */}
-          {activeProducts.length > 0 ? (
+          {isLoading && products.length === 0 ? (
+            <div className="profile-product-grid">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : activeProducts.length > 0 ? (
             <div className="profile-product-grid">
               {activeProducts.map((product) => (
                 <ProductCard

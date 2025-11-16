@@ -127,13 +127,13 @@
 
   /* ==================== HERO GRADIENTS ==================== */
   --gradient-ocean-mist: linear-gradient(135deg, #FAF7F6 0%, #E3DED7 100%);
-  --gradient-ocean-mist-overlay: linear-gradient(135deg, 
-    rgba(250, 247, 246, 1) 0%, 
-    rgba(227, 222, 215, 1) 100%), 
-    linear-gradient(135deg, 
-      rgba(40, 85, 112, 0.08) 0%, 
+  --gradient-ocean-mist-overlay: linear-gradient(135deg,
+    rgba(250, 247, 246, 1) 0%,
+    rgba(227, 222, 215, 1) 100%),
+    linear-gradient(135deg,
+      rgba(40, 85, 112, 0.08) 0%,
       rgba(40, 85, 112, 0.08) 100%);
-  
+
   /* ==================== SHADOWS (Nautical) ==================== */
   --shadow-sm: 0 1px 2px 0 rgba(40, 85, 112, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(40, 85, 112, 0.08), 0 2px 4px -1px rgba(40, 85, 112, 0.04);
@@ -246,8 +246,8 @@
 
   /* ==================== HERO GRADIENTS (Dark) ==================== */
   --gradient-deep-sea: linear-gradient(135deg, #1C3D51 0%, #333333 100%);
-  --gradient-deep-sea-overlay: linear-gradient(135deg, 
-    rgba(28, 61, 81, 1) 0%, 
+  --gradient-deep-sea-overlay: linear-gradient(135deg,
+    rgba(28, 61, 81, 1) 0%,
     rgba(51, 51, 51, 1) 100%);
 
   /* ==================== SHADOWS (darker for dark mode) ==================== */

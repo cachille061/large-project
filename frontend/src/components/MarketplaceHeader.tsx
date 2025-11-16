@@ -263,20 +263,28 @@ export function MarketplaceHeader() {
                         value={imageUrl}
                         onChange={(e) => setImageUrl(e.target.value)}
                         style={{ fontSize: '12px', marginBottom: '8px' }}
-                        onKeyDown={(e) => {
+                        onKeyDown={async (e) => {
                           if (e.key === 'Enter' && imageUrl.trim()) {
-                            updateProfilePicture(imageUrl.trim());
-                            setImageUrl("");
-                            setShowImageInput(false);
+                            try {
+                              await updateProfilePicture(imageUrl.trim());
+                              setImageUrl("");
+                              setShowImageInput(false);
+                            } catch (error) {
+                              console.error("Failed to update profile picture:", error);
+                            }
                           }
                         }}
                       />
                       <Button
-                        onClick={() => {
+                        onClick={async () => {
                           if (imageUrl.trim()) {
-                            updateProfilePicture(imageUrl.trim());
-                            setImageUrl("");
-                            setShowImageInput(false);
+                            try {
+                              await updateProfilePicture(imageUrl.trim());
+                              setImageUrl("");
+                              setShowImageInput(false);
+                            } catch (error) {
+                              console.error("Failed to update profile picture:", error);
+                            }
                           }
                         }}
                         style={{ 

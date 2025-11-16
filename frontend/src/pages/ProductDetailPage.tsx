@@ -11,8 +11,7 @@ import { toast } from "sonner";
 import { SellerInfo } from "../components/SellerInfo";
 import { ProductDetails } from "../components/ProductDetails";
 import { productApi } from "../services/api";
-import { formatPrice } from "../utils/formatPrice";
-import { ProductCondition } from "../constants";
+import { transformProduct } from "../utils/productTransform";
 
 export function ProductDetailPage() {
   const { productId } = useParams<{ productId: string }>();
@@ -35,22 +34,7 @@ export function ProductDetailPage() {
       
       productApi.getById(productId)
         .then((response) => {
-          const p = response.product;
-          const transformedProduct: Product = {
-            id: p._id,
-            title: p.title,
-            price: formatPrice(p.price),
-            location: p.location || "Location not specified",
-            image: p.images?.[0] || "",
-            condition: mapCondition(p.condition),
-            description: p.description,
-            category: p.category,
-            sellerId: p.sellerId,
-            sellerName: p.sellerName || "Unknown Seller",
-            status: p.status === "available" ? "active" : p.status === "delisted" ? "delisted" : p.status,
-            createdAt: p.createdAt,
-          };
-          setFetchedProduct(transformedProduct);
+          setFetchedProduct(transformProduct(response.product));
         })
         .catch((err) => {
           console.error("Error fetching product:", err);
@@ -124,7 +108,7 @@ export function ProductDetailPage() {
 
         <div className="grid-cols-2">
           {/* Image */}
-          <div className="image-bg-dark">
+          <div className="image-bg-dark" style={{ minHeight: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ImageWithFallback
               src={product.image}
               alt={product.title}
@@ -157,9 +141,11 @@ export function ProductDetailPage() {
                     This is your listing
                   </AlertDescription>
                 </Alert>
-                <Button onClick={handleEdit} style={{ width: '100%' }}>
-                  Edit Listing
-                </Button>
+                {product.status !== "sold" && (
+                  <Button onClick={handleEdit} style={{ width: '100%' }}>
+                    Edit Listing
+                  </Button>
+                )}
               </div>
             ) : canPurchase ? (
               <Button

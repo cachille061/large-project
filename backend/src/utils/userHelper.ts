@@ -101,9 +101,9 @@ export const getUsersByIds = async (userIds: string[]) => {
 };
 
 /**
- * Enrich products array with seller information
+ * Enrich products array with seller information and transform to frontend format
  * @param products - Array of products
- * @returns Products with sellerName and sellerEmail added
+ * @returns Products formatted for frontend consumption
  */
 export const enrichProductsWithSellerInfo = async (products: any[]) => {
     if (!products || products.length === 0) return products;
@@ -122,23 +122,34 @@ export const enrichProductsWithSellerInfo = async (products: any[]) => {
         sellerMap.set(seller.id, seller);
     });
     
-    // Add seller info to each product
+    // Add seller info and transform to frontend format
     return products.map((product: any) => {
         const seller = sellerMap.get(product.sellerId);
         const productObj = product.toObject ? product.toObject() : product;
         
         return {
-            ...productObj,
+            _id: productObj._id,
+            title: productObj.title,
+            description: productObj.description,
+            price: productObj.price,
+            originalPrice: productObj.originalPrice,
+            condition: productObj.condition,
+            status: productObj.status,
+            category: productObj.category,
+            images: productObj.images || [],
+            location: productObj.location,
+            sellerId: productObj.sellerId,
             sellerName: seller?.name || seller?.email || 'Unknown Seller',
-            sellerEmail: seller?.email || '',
+            createdAt: productObj.createdAt,
+            updatedAt: productObj.updatedAt,
         };
     });
 };
 
 /**
- * Enrich single product with seller information
+ * Enrich single product with seller information and transform to frontend format
  * @param product - Single product
- * @returns Product with sellerName and sellerEmail added
+ * @returns Product formatted for frontend consumption
  */
 export const enrichProductWithSellerInfo = async (product: any) => {
     if (!product) return product;
@@ -147,8 +158,19 @@ export const enrichProductWithSellerInfo = async (product: any) => {
     const productObj = product.toObject ? product.toObject() : product;
     
     return {
-        ...productObj,
+        _id: productObj._id,
+        title: productObj.title,
+        description: productObj.description,
+        price: productObj.price,
+        originalPrice: productObj.originalPrice,
+        condition: productObj.condition,
+        status: productObj.status,
+        category: productObj.category,
+        images: productObj.images || [],
+        location: productObj.location,
+        sellerId: productObj.sellerId,
         sellerName: seller?.name || seller?.email || 'Unknown Seller',
-        sellerEmail: seller?.email || '',
+        createdAt: productObj.createdAt,
+        updatedAt: productObj.updatedAt,
     };
 };

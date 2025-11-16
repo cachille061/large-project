@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import { ProductCategory, ProductCondition, ProductStatus } from "../constants";
 import { productApi, orderApi } from "../services/api";
 import { useAuth } from "./AuthContext";
 import { formatPrice } from "../utils/formatPrice";
+import { transformProducts } from "../utils/productTransform";
 
 export interface Product {
   id: string;
@@ -67,30 +68,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const isMountedRef = useRef(true);
+  const isAuthenticatedRef = useRef(false);
+
+  // Update auth ref whenever user changes
+  useEffect(() => {
+    isAuthenticatedRef.current = !!user;
+  }, [user]);
 
   // Fetch products on mount
   const refreshProducts = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await productApi.getAll({ limit: 100 });
+      // Reduce initial load - fetch only 20 products for faster initial render
+      const response = await productApi.getAll({ limit: 20 });
       
-      // Transform backend data to frontend format
-      const transformedProducts: Product[] = response.products.map((p: any) => ({
-        id: p._id,
-        title: p.title,
-        price: formatPrice(p.price),
-        originalPrice: p.originalPrice ? formatPrice(p.originalPrice) : undefined,
-        location: p.location || "Location not specified",
-        image: p.images?.[0] || "",
-        condition: mapCondition(p.condition),
-        description: p.description,
-        category: p.category,
-        sellerId: p.sellerId,
-        sellerName: p.sellerName || "Unknown Seller", // Now coming from backend
-        status: p.status === "available" ? "active" : p.status === "delisted" ? "delisted" : p.status,
-        createdAt: p.createdAt,
-      }));
+      // Transform backend data to frontend format using shared utility
+      const transformedProducts = transformProducts(response.products);
       
       setProducts(transformedProducts);
     } catch (err: any) {
@@ -103,15 +98,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch orders on mount if user is logged in
   const refreshOrders = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setOrders([]); // Clear orders when user logs out
+      return;
+    }
     
     try {
       setIsLoading(true);
       setError(null);
+      
       const [currentOrders, previousOrders] = await Promise.all([
         orderApi.getCurrentOrders(),
         orderApi.getPreviousOrders(),
       ]);
+      
+      // Check if still authenticated and mounted before updating state
+      if (!isAuthenticatedRef.current || !isMountedRef.current) {
+        return;
+      }
       
       // Transform backend data to frontend format
       const allOrders: Order[] = [
@@ -121,10 +125,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       
       setOrders(allOrders);
     } catch (err: any) {
-      console.error("Error fetching orders:", err);
-      setError(err.message);
+      // Only process errors if still authenticated and mounted
+      if (!isAuthenticatedRef.current || !isMountedRef.current) {
+        return;
+      }
+      
+      // Don't log 401 errors (expected during auth transitions)
+      if (err.message !== 'Unauthorized') {
+        console.error("Error fetching orders:", err);
+        setError(err.message);
+      }
+      setOrders([]); // Clear orders on error
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [user]);
 
@@ -134,22 +149,44 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (user) {
-      refreshOrders();
+      // Small delay to ensure session is established
+      const timer = setTimeout(() => {
+        if (isAuthenticatedRef.current) {
+          refreshOrders();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      // Clear orders immediately when user becomes null
+      setOrders([]);
+      setError(null);
     }
   }, [user, refreshOrders]);
 
-  const addProduct = async (productData: Omit<Product, "id" | "createdAt" | "status">) => {
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const addProduct = async (productData: any) => {
     try {
       setIsLoading(true);
       setError(null);
       
+      // Handle price as either string or number
+      const priceValue = typeof productData.price === 'string' 
+        ? parseFloat(productData.price.replace(/[$,]/g, ""))
+        : productData.price;
+      
       const backendData = {
         title: productData.title,
         description: productData.description,
-        price: parseFloat(productData.price.replace(/[$,]/g, "")),
+        price: priceValue,
         condition: mapConditionToBackend(productData.condition),
         category: productData.category,
-        images: productData.image ? [productData.image] : [],
+        images: productData.images || (productData.image ? [productData.image] : []),
         location: productData.location,
       };
       
@@ -164,7 +201,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateProduct = async (id: string, updates: Partial<Product>) => {
+  const updateProduct = async (id: string, updates: any) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -172,11 +209,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const backendUpdates: any = {};
       if (updates.title) backendUpdates.title = updates.title;
       if (updates.description) backendUpdates.description = updates.description;
-      if (updates.price) backendUpdates.price = parseFloat(updates.price.replace(/[$,]/g, ""));
+      if (updates.price !== undefined) {
+        backendUpdates.price = typeof updates.price === 'string'
+          ? parseFloat(updates.price.replace(/[$,]/g, ""))
+          : updates.price;
+      }
       if (updates.condition) backendUpdates.condition = mapConditionToBackend(updates.condition);
       if (updates.category) backendUpdates.category = updates.category;
-      if (updates.image) backendUpdates.images = [updates.image];
-      if (updates.location) backendUpdates.location = updates.location;
+      if (updates.images) {
+        backendUpdates.images = updates.images;
+      } else if (updates.image) {
+        backendUpdates.images = [updates.image];
+      }
+      if (updates.location !== undefined) backendUpdates.location = updates.location;
       if (updates.status === "sold") backendUpdates.status = "sold";
       if (updates.status === "active") backendUpdates.status = "available";
       if (updates.status === "delisted") backendUpdates.status = "delisted";

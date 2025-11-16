@@ -71,7 +71,7 @@ export function ProfilePage() {
             <div className="profile-banner-input-panel">
               <input
                 type="text"
-                placeholder="Enter banner image URL"
+                placeholder="Enter banner image URL (e.g., https://example.com/banner.jpg)"
                 value={bannerUrl}
                 onChange={(e) => setBannerUrl(e.target.value)}
                 style={{
@@ -80,7 +80,7 @@ export function ProfilePage() {
                   border: '1px solid #E8E7E5',
                   borderRadius: '6px',
                   fontSize: '13px',
-                  marginBottom: '8px',
+                  marginBottom: '4px',
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -88,6 +88,9 @@ export function ProfilePage() {
                   }
                 }}
               />
+              <p style={{ fontSize: '11px', color: '#666', marginBottom: '8px', lineHeight: '1.4' }}>
+                💡 Banner will be sized to 250px height (wide format). Use landscape images for best results.
+              </p>
               <Button
                 onClick={handleBannerSave}
                 className="w-full"

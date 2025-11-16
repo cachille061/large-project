@@ -17,7 +17,19 @@ async function apiCall<T>(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || `HTTP ${response.status}`);
+    
+    // Extract detailed validation errors if available
+    let errorMessage = error.error || `HTTP ${response.status}`;
+    if (error.details && Array.isArray(error.details)) {
+      errorMessage = error.details.map((d: any) => `${d.field}: ${d.message}`).join(', ');
+    }
+    
+    // Suppress 401 errors from being logged (expected during logout)
+    if (response.status !== 401) {
+      console.error(`API Error [${endpoint}]:`, errorMessage, error);
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -149,6 +161,16 @@ export const orderApi = {
 
   searchPreviousOrders: async (q: string) => {
     return apiCall<{ orders: any[] }>(`/orders/previous/search?q=${encodeURIComponent(q)}`);
+  },
+};
+
+// Payment API
+export const paymentApi = {
+  createCheckoutSession: async (orderId: string) => {
+    return apiCall<{ sessionId: string; url: string }>('/payments/stripe/checkout-session', {
+      method: 'POST',
+      body: JSON.stringify({ orderId }),
+    });
   },
 };
 

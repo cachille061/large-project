@@ -3,23 +3,19 @@ import { z } from 'zod';
 
 export const PRODUCT_CATEGORIES = [
     'Laptops & Computers',
-    'Phones & Tablets',
-    'Audio & Headphones',
-    'Cameras & Photography',
-    'Gaming Consoles & Accessories',
     'Monitors & Displays',
-    'Computer Components',
-    'Networking Equipment',
-    'Wearables & Smart Devices',
+    'Computer Parts',
     'Storage & Memory',
-    'Keyboards & Mice',
+    'Keyboards',
+    'Mice & Peripherals',
+    'Audio & Headphones',
+    'Phones & Tablets',
+    'Cameras & Webcams',
     'Printers & Scanners',
-    'Smart Home Devices',
-    'Drones & RC',
-    'VR & AR Headsets',
-    'Software & Licenses',
+    'Networking',
     'Cables & Accessories',
-    'Other Tech',
+    'Gaming Consoles',
+    'Streaming Equipment',
 ] as const;
 
 const createProductSchema = z.object({

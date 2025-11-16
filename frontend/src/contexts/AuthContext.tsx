@@ -5,7 +5,7 @@ interface User {
   id: string;
   email: string;
   name: string;
-  image?: string;
+  profilePicture?: string;
 }
 
 interface AuthContextType {
@@ -14,7 +14,7 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<boolean>;
-  updateProfilePicture: (imageUrl: string) => void;
+  updateProfilePicture: (imageUrl: string) => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: session.user.id,
         email: session.user.email,
         name: session.user.name,
-        image: session.user.image,
+        profilePicture: session.user.image,
       }
     : null;
 
@@ -128,9 +128,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateProfilePicture = (imageUrl: string) => {
-    // This would need to be implemented via Better Auth's update user endpoint
-    console.log("Update profile picture:", imageUrl);
+  const updateProfilePicture = async (imageUrl: string) => {
+    try {
+      // Update profile picture via Better Auth API
+      const response = await fetch('/api/auth/update-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          image: imageUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile picture');
+      }
+
+      // Trigger a soft refresh instead of full page reload
+      window.dispatchEvent(new Event('profile-updated'));
+    } catch (error) {
+      console.error("Update profile picture error:", error);
+      throw error;
+    }
   };
 
   return (

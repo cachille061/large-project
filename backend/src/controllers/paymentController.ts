@@ -37,9 +37,9 @@ export const createStripeCheckoutSession = async (req: Request, res: Response) =
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: lineItems,
-      client_reference_id: order.id, // we’ll use this in the webhook
-      success_url: `${process.env.FRONTEND_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/checkout/cancel`,
+      client_reference_id: order.id, // we'll use this in the webhook
+      success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
     });
 
     return res.json({ url: session.url });

@@ -1,5 +1,21 @@
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { Home, ShoppingBag, Package, Plus, Laptop, Monitor, Cpu, Mouse, Keyboard, Tablet, Camera, Mic, Headphones, Smartphone, User } from "lucide-react";
+import { 
+  Home, 
+  ShoppingBag, 
+  Package, 
+  User,
+  Plus,
+  Laptop,
+  Monitor,
+  Cpu,
+  Mouse,
+  Keyboard,
+  Tablet,
+  Smartphone,
+  Camera,
+  Mic,
+  Headphones
+} from "lucide-react";
 import { Button } from "./ui/button";
 
 export function Sidebar() {

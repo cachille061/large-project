@@ -109,12 +109,14 @@
 }
 
 /* ==================== IMAGE UTILITIES ==================== */
+/* Product Card Images - 4:3 aspect ratio */
 .image-container {
   position: relative;
-  padding-top: 75%;
+  padding-top: 75%; /* 4:3 aspect ratio */
   overflow: hidden;
   border-radius: 12px;
   background-color: var(--color-surface-muted, #F5F3F1);
+  width: 100%;
 }
 
 .image-absolute {
@@ -124,6 +126,199 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+}
+
+/* Profile Banner - 16:5 aspect ratio (wider) */
+.profile-banner-image {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 12px 12px 0 0;
+  max-width: 100%;
+  max-height: 250px;
+  overflow: hidden;
+}
+
+/* Profile Avatar - Square */
+.profile-avatar-large {
+  width: 120px !important;
+  height: 120px !important;
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden !important;
+}
+
+.profile-avatar-large img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+.profile-avatar-medium {
+  width: 80px !important;
+  height: 80px !important;
+  border: 3px solid white;
+  overflow: hidden !important;
+}
+
+.profile-avatar-medium img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+.profile-avatar-small {
+  width: 48px !important;
+  height: 48px !important;
+  border: 2px solid white;
+  overflow: hidden !important;
+}
+
+.profile-avatar-small img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+/* Order/Checkout Images - Square */
+.order-item-image {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+  max-width: 64px;
+  max-height: 64px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 8px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: block;
+}
+
+.order-item-image-container {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+  max-width: 64px;
+  max-height: 64px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: var(--color-surface-muted, #F5F3F1);
+}
+
+.order-item-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.checkout-item-image {
+  width: 80px;
+  height: 80px;
+  min-width: 80px;
+  min-height: 80px;
+  max-width: 80px;
+  max-height: 80px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 8px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: block;
+}
+
+.checkout-item-image-container {
+  width: 80px;
+  height: 80px;
+  min-width: 80px;
+  min-height: 80px;
+  max-width: 80px;
+  max-height: 80px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: var(--color-surface-muted, #F5F3F1);
+}
+
+.checkout-item-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Product Detail Page - 16:9 aspect ratio */
+.product-detail-image-container {
+  position: relative;
+  padding-top: 56.25%; /* 16:9 aspect ratio */
+  overflow: hidden;
+  border-radius: 12px;
+  background-color: var(--color-surface-muted, #F5F3F1);
+  width: 100%;
+  max-width: 100%;
+}
+
+.product-detail-image-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Listing Card Images (My Listings) - 3:2 aspect ratio */
+.listing-card-image {
+  width: 100px;
+  height: 67px;
+  min-width: 100px;
+  min-height: 67px;
+  max-width: 100px;
+  max-height: 67px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 8px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: block;
+}
+
+.listing-card-image-container {
+  width: 100px;
+  height: 67px;
+  min-width: 100px;
+  min-height: 67px;
+  max-width: 100px;
+  max-height: 67px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: var(--color-surface-muted, #F5F3F1);
+}
+
+.listing-card-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 /* ==================== CARD UTILITIES ==================== */

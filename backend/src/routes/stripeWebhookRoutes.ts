@@ -1,7 +1,6 @@
 // backend/src/routes/stripeWebhookRoutes.ts
-import { Router } from "express";
+import { Router, raw } from "express";
 import Stripe from "stripe";
-import bodyParser from "body-parser";
 import Order from "../models/Order";
 import Product from "../models/Products";
 
@@ -14,7 +13,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 // This route MUST use raw body so Stripe signature verification works
 router.post(
   "/stripe", // 👈 only /stripe here; full path will be /api/webhooks/stripe
-  bodyParser.raw({ type: "application/json" }),
+  raw({ type: "application/json" }),
   async (req, res) => {
     const sig = req.headers["stripe-signature"];
 

@@ -57,38 +57,90 @@ export function AddEditProductPage() {
     );
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Basic validation
-    if (!title || !price || !category || !condition || !description) {
-      toast.error("Please fill in all required fields");
+    // Comprehensive validation
+    if (!title || title.trim().length < 3 || title.length > 100) {
+      toast.error("Title must be between 3 and 100 characters");
+      setLoading(false);
+      return;
+    }
+
+    if (!description || description.trim().length < 10 || description.length > 2000) {
+      toast.error("Description must be between 10 and 2000 characters");
+      setLoading(false);
+      return;
+    }
+
+    if (!price) {
+      toast.error("Please enter a price");
+      setLoading(false);
+      return;
+    }
+
+    // Parse price to number, removing $ if present
+    const numericPrice = parseFloat(price.replace(/[$,]/g, ''));
+    
+    if (isNaN(numericPrice) || numericPrice < 0) {
+      toast.error("Please enter a valid positive price");
+      setLoading(false);
+      return;
+    }
+
+    if (!category) {
+      toast.error("Please select a category");
+      setLoading(false);
+      return;
+    }
+
+    if (!condition) {
+      toast.error("Please select a condition");
+      setLoading(false);
+      return;
+    }
+
+    // Require image URL
+    if (!imageUrl || !imageUrl.trim()) {
+      toast.error("Please provide an image URL for your listing");
+      setLoading(false);
+      return;
+    }
+
+    // Validate image URL
+    try {
+      new URL(imageUrl);
+    } catch {
+      toast.error("Please enter a valid image URL");
       setLoading(false);
       return;
     }
 
     const productData = {
-      title,
-      price: price.startsWith("$") ? price : `$${price}`,
-      location,
+      title: title.trim(),
+      price: numericPrice,
+      location: location.trim(),
       category: category as any,
       condition: condition as any,
-      description,
-      image: imageUrl || "https://images.unsplash.com/photo-1748801583998-c693323e6305?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwcHJvZHVjdCUyMHBsYWNlaG9sZGVyfGVufDF8fHx8MTc2MTkyNDAyN3ww&ixlib=rb-4.1.0&q=80&w=1080",
-      sellerId: user.id,
-      sellerName: user.name,
+      description: description.trim(),
+      images: [imageUrl.trim()],
     };
 
-    if (isEdit) {
-      updateProduct(productId!, productData);
-      toast.success("Product updated successfully");
-    } else {
-      addProduct(productData);
-      toast.success("Product listed successfully");
+    try {
+      if (isEdit) {
+        await updateProduct(productId!, productData);
+        toast.success("Product updated successfully");
+      } else {
+        await addProduct(productData);
+        toast.success("Product listed successfully");
+      }
+      navigate("/my-listings");
+    } catch (error: any) {
+      console.error("Submit error:", error);
+      toast.error(error.message || "Failed to save product");
+      setLoading(false);
     }
-
-    navigate("/my-listings");
   };
 
   return (
@@ -102,7 +154,7 @@ export function AddEditProductPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle style={{ fontSize: '32px', fontWeight: '700', color: '#1C3D51', fontFamily: '"Architects Daughter", cursive' }}>
-              {isEdit ? "Edit Listing" : "List New Product"}
+              {isEdit ? "Edit Listing" : "Create New Listing"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -113,10 +165,20 @@ export function AddEditProductPage() {
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  onBlur={() => {
+                    if (title && (title.length < 3 || title.length > 100)) {
+                      toast.error("Title must be between 3 and 100 characters");
+                    }
+                  }}
                   placeholder="e.g., Gaming Keyboard RGB Mechanical"
                   required
+                  minLength={3}
+                  maxLength={100}
                   className="shadow-sm"
                 />
+                {title && title.length > 0 && (
+                  <p className="text-xs text-muted-foreground">{title.length}/100 characters</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -125,6 +187,12 @@ export function AddEditProductPage() {
                   id="price"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
+                  onBlur={() => {
+                    const numericPrice = parseFloat(price.replace(/[$,]/g, ''));
+                    if (price && (isNaN(numericPrice) || numericPrice < 0)) {
+                      toast.error("Please enter a valid positive price");
+                    }
+                  }}
                   placeholder="e.g., 85 or $85"
                   required
                 />
@@ -178,24 +246,43 @@ export function AddEditProductPage() {
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  onBlur={() => {
+                    if (description && (description.length < 10 || description.length > 2000)) {
+                      toast.error("Description must be between 10 and 2000 characters");
+                    }
+                  }}
                   placeholder="Describe your product in detail..."
                   rows={5}
                   required
+                  minLength={10}
+                  maxLength={2000}
                 />
+                {description && description.length > 0 && (
+                  <p className={`text-xs ${description.length < 10 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                    {description.length}/2000 characters {description.length < 10 ? `(minimum 10)` : ''}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="imageUrl">Image URL (optional)</Label>
+                <Label htmlFor="imageUrl">Product Image URL *</Label>
                 <Input
                   id="imageUrl"
                   type="url"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://example.com/image.jpg"
+                  onBlur={() => {
+                    if (imageUrl && imageUrl.trim()) {
+                      try {
+                        new URL(imageUrl);
+                      } catch {
+                        toast.error("Please enter a valid URL starting with http:// or https://");
+                      }
+                    }
+                  }}
+                  placeholder="https://example.com/product-image.jpg"
+                  required
                 />
-                <p className="text-xs text-gray-500">
-                  Leave empty to use a placeholder image
-                </p>
               </div>
 
               <div className="flex gap-3 pt-4">

@@ -15,8 +15,8 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, 
-    rgba(40, 85, 112, 0.08) 0%, 
+  background: linear-gradient(135deg,
+    rgba(40, 85, 112, 0.08) 0%,
     rgba(40, 85, 112, 0.04) 100%);
   pointer-events: none;
 }
@@ -28,32 +28,32 @@
 
 /* Teal Waves - Alternative gradient */
 .gradient-teal-waves {
-  background: linear-gradient(135deg, 
-    #285570 0%, 
-    #5899B5 50%, 
+  background: linear-gradient(135deg,
+    #285570 0%,
+    #5899B5 50%,
     #8DC0D1 100%);
 }
 
 /* Sandy Shore - Warm gradient */
 .gradient-sandy-shore {
-  background: linear-gradient(135deg, 
-    #FAF7F6 0%, 
-    #E3DED7 50%, 
+  background: linear-gradient(135deg,
+    #FAF7F6 0%,
+    #E3DED7 50%,
     #CBCAC7 100%);
 }
 
 /* Horizon - Subtle gradient */
 .gradient-horizon {
-  background: linear-gradient(180deg, 
-    var(--color-primary-50) 0%, 
+  background: linear-gradient(180deg,
+    var(--color-primary-50) 0%,
     var(--color-surface) 100%);
 }
 
 /* Depth - Dramatic gradient */
 .gradient-depth {
-  background: linear-gradient(180deg, 
-    var(--color-primary-900) 0%, 
-    var(--color-primary-700) 50%, 
+  background: linear-gradient(180deg,
+    var(--color-primary-900) 0%,
+    var(--color-primary-700) 50%,
     var(--color-primary-500) 100%);
 }
 
@@ -112,21 +112,21 @@
 
 /* Soft Shadow - for cards */
 .shadow-soft {
-  box-shadow: 
+  box-shadow:
     0 2px 4px rgba(40, 85, 112, 0.04),
     0 8px 16px rgba(40, 85, 112, 0.08);
 }
 
 /* Sharp Shadow - for buttons */
 .shadow-sharp {
-  box-shadow: 
+  box-shadow:
     0 1px 2px rgba(40, 85, 112, 0.1),
     0 4px 8px rgba(40, 85, 112, 0.15);
 }
 
 /* Elevated Shadow - for modals */
 .shadow-elevated {
-  box-shadow: 
+  box-shadow:
     0 10px 20px rgba(40, 85, 112, 0.1),
     0 20px 40px rgba(40, 85, 112, 0.15),
     0 40px 80px rgba(40, 85, 112, 0.2);
@@ -134,14 +134,14 @@
 
 /* Glow Shadow - for emphasis */
 .shadow-glow {
-  box-shadow: 
+  box-shadow:
     0 0 20px rgba(40, 85, 112, 0.3),
     0 0 40px rgba(40, 85, 112, 0.2);
 }
 
 /* Accent Glow */
 .shadow-accent-glow {
-  box-shadow: 
+  box-shadow:
     0 0 20px rgba(31, 139, 168, 0.4),
     0 0 40px rgba(31, 139, 168, 0.2);
 }
@@ -163,7 +163,7 @@
 
 .border-nautical-gradient {
   border: 2px solid transparent;
-  background-image: 
+  background-image:
     linear-gradient(var(--color-surface), var(--color-surface)),
     linear-gradient(135deg, var(--color-primary-400), var(--color-accent-500));
   background-origin: border-box;
@@ -194,7 +194,7 @@
 }
 
 .hover-glow:hover {
-  box-shadow: 
+  box-shadow:
     0 0 20px rgba(40, 85, 112, 0.3),
     0 0 40px rgba(40, 85, 112, 0.15);
 }
@@ -219,8 +219,8 @@
 /* ==================== TEXT EFFECTS ==================== */
 
 .text-gradient-nautical {
-  background: linear-gradient(135deg, 
-    var(--color-primary-600), 
+  background: linear-gradient(135deg,
+    var(--color-primary-600),
     var(--color-accent-500));
   -webkit-background-clip: text;
   background-clip: text;
@@ -289,7 +289,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     repeating-linear-gradient(
       0deg,
       rgba(40, 85, 112, 0.03) 0px,
@@ -350,7 +350,7 @@
 }
 
 .pattern-grid {
-  background-image: 
+  background-image:
     linear-gradient(var(--color-border-subtle) 1px, transparent 1px),
     linear-gradient(90deg, var(--color-border-subtle) 1px, transparent 1px);
   background-size: 20px 20px;

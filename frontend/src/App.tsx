@@ -1,21 +1,41 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { memo } from "react";
+import { memo, lazy, Suspense } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
 import { MarketplaceHeader } from "./components/MarketplaceHeader";
 import { Sidebar } from "./components/Sidebar";
+
+// Eager load auth pages (needed immediately)
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
-import { HomePage } from "./pages/HomePage";
-import { ProductSearchPage } from "./pages/ProductSearchPage";
-import { ProductDetailPage } from "./pages/ProductDetailPage";
-import { MyListingsPage } from "./pages/MyListingsPage";
-import { AddEditProductPage } from "./pages/AddEditProductPage";
-import { OrdersPage } from "./pages/OrdersPage";
-import { ProfilePage } from "./pages/ProfilePage";
-import { PublicProfilePage } from "./pages/PublicProfilePage";
-import { FontGalleryPage } from "./pages/FontGalleryPage";
+
+// Lazy load other pages
+const HomePage = lazy(() => import("./pages/HomePage").then(m => ({ default: m.HomePage })));
+const ProductSearchPage = lazy(() => import("./pages/ProductSearchPage").then(m => ({ default: m.ProductSearchPage })));
+const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage").then(m => ({ default: m.ProductDetailPage })));
+const MyListingsPage = lazy(() => import("./pages/MyListingsPage").then(m => ({ default: m.MyListingsPage })));
+const AddEditProductPage = lazy(() => import("./pages/AddEditProductPage").then(m => ({ default: m.AddEditProductPage })));
+const OrdersPage = lazy(() => import("./pages/OrdersPage").then(m => ({ default: m.OrdersPage })));
+const ProfilePage = lazy(() => import("./pages/ProfilePage").then(m => ({ default: m.ProfilePage })));
+const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage").then(m => ({ default: m.PublicProfilePage })));
+const FontGalleryPage = lazy(() => import("./pages/FontGalleryPage").then(m => ({ default: m.FontGalleryPage })));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage").then(m => ({ default: m.CheckoutPage })));
+const PaymentSuccessPage = lazy(() => import("./pages/PaymentSuccessPage").then(m => ({ default: m.PaymentSuccessPage })));
+const PaymentCancelPage = lazy(() => import("./pages/PaymentCancelPage").then(m => ({ default: m.PaymentCancelPage })));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div style={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    minHeight: '400px',
+    color: '#285570' 
+  }}>
+    <div>Loading...</div>
+  </div>
+);
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -93,6 +113,29 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F8F5F0', position: 'relative' }}>
+      {/* Skip to main content link for accessibility */}
+      <a
+        href="#main-content"
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          zIndex: 9999,
+          padding: '8px 16px',
+          backgroundColor: '#285570',
+          color: 'white',
+          textDecoration: 'none',
+          borderRadius: '4px',
+          top: '8px',
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.left = '8px';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.left = '-9999px';
+        }}
+      >
+        Skip to main content
+      </a>
       <BackgroundDecorations />
       
       {/* Main content */}
@@ -101,12 +144,14 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         {isAuthenticated ? (
           <div style={{ display: 'flex' }}>
             <Sidebar />
-            <div style={{ flex: 1 }}>
+            <div id="main-content" style={{ flex: 1 }}>
               {children}
             </div>
           </div>
         ) : (
-          children
+          <div id="main-content">
+            {children}
+          </div>
         )}
       </div>
     </div>
@@ -126,7 +171,9 @@ function AppRoutes() {
         path="/"
         element={
           <AppLayout>
-            <HomePage />
+            <Suspense fallback={<LoadingFallback />}>
+              <HomePage />
+            </Suspense>
           </AppLayout>
         }
       />
@@ -134,7 +181,9 @@ function AppRoutes() {
         path="/search"
         element={
           <AppLayout>
-            <ProductSearchPage />
+            <Suspense fallback={<LoadingFallback />}>
+              <ProductSearchPage />
+            </Suspense>
           </AppLayout>
         }
       />
@@ -142,7 +191,9 @@ function AppRoutes() {
         path="/fonts"
         element={
           <AppLayout>
-            <FontGalleryPage />
+            <Suspense fallback={<LoadingFallback />}>
+              <FontGalleryPage />
+            </Suspense>
           </AppLayout>
         }
       />
@@ -150,7 +201,9 @@ function AppRoutes() {
         path="/product/:productId"
         element={
           <AppLayout>
-            <ProductDetailPage />
+            <Suspense fallback={<LoadingFallback />}>
+              <ProductDetailPage />
+            </Suspense>
           </AppLayout>
         }
       />
@@ -159,7 +212,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AppLayout>
-              <OrdersPage />
+              <Suspense fallback={<LoadingFallback />}>
+                <OrdersPage />
+              </Suspense>
             </AppLayout>
           </ProtectedRoute>
         }
@@ -169,7 +224,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AppLayout>
-              <MyListingsPage />
+              <Suspense fallback={<LoadingFallback />}>
+                <MyListingsPage />
+              </Suspense>
             </AppLayout>
           </ProtectedRoute>
         }
@@ -179,7 +236,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AppLayout>
-              <AddEditProductPage />
+              <Suspense fallback={<LoadingFallback />}>
+                <AddEditProductPage />
+              </Suspense>
             </AppLayout>
           </ProtectedRoute>
         }
@@ -189,7 +248,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AppLayout>
-              <AddEditProductPage />
+              <Suspense fallback={<LoadingFallback />}>
+                <AddEditProductPage />
+              </Suspense>
             </AppLayout>
           </ProtectedRoute>
         }
@@ -199,7 +260,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AppLayout>
-              <ProfilePage />
+              <Suspense fallback={<LoadingFallback />}>
+                <ProfilePage />
+              </Suspense>
             </AppLayout>
           </ProtectedRoute>
         }
@@ -208,7 +271,41 @@ function AppRoutes() {
         path="/seller/:userId"
         element={
           <AppLayout>
-            <PublicProfilePage />
+            <Suspense fallback={<LoadingFallback />}>
+              <PublicProfilePage />
+            </Suspense>
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/checkout/:orderId"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <Suspense fallback={<LoadingFallback />}>
+                <CheckoutPage />
+              </Suspense>
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/payment/success"
+        element={
+          <AppLayout>
+            <Suspense fallback={<LoadingFallback />}>
+              <PaymentSuccessPage />
+            </Suspense>
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/payment/cancel"
+        element={
+          <AppLayout>
+            <Suspense fallback={<LoadingFallback />}>
+              <PaymentCancelPage />
+            </Suspense>
           </AppLayout>
         }
       />

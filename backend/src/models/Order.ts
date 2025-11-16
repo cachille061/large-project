@@ -50,4 +50,7 @@ const OrderSchema = new Schema<IOrder>(
 // text search in item titles
 OrderSchema.index({ "items.title": "text" });
 
+// Compound index for common query pattern (user + status)
+OrderSchema.index({ user: 1, status: 1 });
+
 export default model<IOrder>("Order", OrderSchema);
