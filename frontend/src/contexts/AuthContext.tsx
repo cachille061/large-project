@@ -131,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfilePicture = async (imageUrl: string) => {
     try {
       // Update profile picture via Better Auth API
-      const response = await fetch('http://localhost:3000/api/auth/update-user', {
+      const response = await fetch('/api/auth/update-user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
