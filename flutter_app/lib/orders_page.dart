@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/main.dart';
 import 'package:flutter_app/api_requests.dart';
+import 'package:flutter_app/product_details.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -16,24 +17,24 @@ class _OrdersPageState extends State<OrdersPage>
   List<dynamic> allOrders = [];
   List<dynamic> pendingOrders = [];
   List<dynamic> completedOrders = [];
-  List<dynamic> cancelledOrders = [];
+  String orderId = "";
 
   dynamic orderToCancel; // selected order
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     getOrders();
   }
 
   void getOrders() async {
-    final (List, List) orders = await ApiRequests().getOrders();
+    final (List, List, String) orders = await ApiRequests().getOrders();
     setState(() {
       pendingOrders = orders.$1;
       completedOrders = orders.$2;
+      orderId = orders.$3;
       allOrders = orders.$1 + orders.$2;
-      debugPrint(allOrders.toString());
     });
   }
 
@@ -44,38 +45,94 @@ class _OrdersPageState extends State<OrdersPage>
     );
   }
 
+  void _clickProduct(String id) {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => ProductDetailPage(productId: id),
+      ),
+    );
+  }
+
+  void _checkoutOrders() {
+    ApiRequests().checkoutOrders();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("My Listings"),
+        title: const Text("My Orders"),
         backgroundColor: colors.primaryContainer,
       ),
-      body: Center(
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            const Text(
-              "My Orders",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
+      body: Column(
+        children: [
+          const SizedBox(height: 16),
+          const Text(
+            "My Orders",
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+          ),
 
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-            allOrders.isEmpty
-                ? _buildEmptyState(
-                    icon: Icons.shopping_bag_outlined,
-                    title: "No orders yet",
-                    subtitle: "Start shopping to see your orders here",
-                    actionLabel: "Browse products",
-                    onAction: () {
-                      _homeButton(context);
-                    },
-                  )
-                : _buildTabs(),
-          ],
-        ),
+          allOrders.isEmpty
+              ? _buildEmptyState(
+                  icon: Icons.shopping_bag_outlined,
+                  title: "No orders yet",
+                  subtitle: "Start shopping to see your orders here",
+                  actionLabel: "Browse products",
+                  onAction: () {
+                    _homeButton(context);
+                  },
+                )
+              : Expanded(
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 150,
+                            height: 50,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: colors.secondaryContainer,
+                              ),
+                              onPressed: () => _checkoutOrders(),
+                              child: Text(
+                                "Checkout Cart",
+                                style: TextStyle(
+                                  color: colors.onSecondaryContainer,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          SizedBox(
+                            width: 150,
+                            height: 50,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: colors.errorContainer,
+                              ),
+                              onPressed: () => _showCancelDialog(orderId),
+                              child: Text(
+                                "Cancel Cart",
+                                style: TextStyle(
+                                  color: colors.onErrorContainer,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 32),
+                      _buildTabs(),
+                    ],
+                  ),
+                ),
+        ],
       ),
       bottomNavigationBar: NavBar(),
     );
@@ -91,17 +148,14 @@ class _OrdersPageState extends State<OrdersPage>
           TabBar(
             controller: _tabController,
             tabs: [
-              Tab(text: "All Orders (${allOrders.length})"),
-              Tab(text: "Pending (${pendingOrders.length})"),
+              Tab(text: "Cart (${pendingOrders.length})"),
               Tab(text: "Completed (${completedOrders.length})"),
-              Tab(text: "Cancelled (${cancelledOrders.length})"),
             ],
           ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildOrderList(allOrders, showCancel: true),
                 _buildWithEmpty(
                   pendingOrders,
                   icon: Icons.inventory_2_outlined,
@@ -112,12 +166,6 @@ class _OrdersPageState extends State<OrdersPage>
                   completedOrders,
                   icon: Icons.inventory_2_outlined,
                   title: "No completed orders",
-                  showCancel: false,
-                ),
-                _buildWithEmpty(
-                  cancelledOrders,
-                  icon: Icons.inventory_2_outlined,
-                  title: "No cancelled orders",
                   showCancel: false,
                 ),
               ],
@@ -147,32 +195,123 @@ class _OrdersPageState extends State<OrdersPage>
   }
 
   Widget _buildOrderList(List orders, {required bool showCancel}) {
+    final colors = Theme.of(context).colorScheme;
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 16),
       itemCount: orders.length,
-      itemBuilder: (context, index) {
-        final order = orders[index];
-        return _buildOrderCard(order, showCancel: showCancel);
+      itemBuilder: (context, i) {
+        final product = orders[i];
+        debugPrint("order: $product");
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: colors.secondaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.image, size: 40),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 130,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              product["title"],
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                            Text(
+                              "\$${product["price"].toString()}",
+                              style: TextStyle(
+                                color: colors.onSecondaryContainer,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                          ],
+                        ),
+                      ),
+                      Spacer(),
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: 100,
+                            height: 30,
+                            child: OutlinedButton(
+                              onPressed: () =>
+                                  _clickProduct(product["product"]),
+                              child: Text("Details"),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       },
     );
   }
 
   Widget _buildOrderCard(dynamic order, {required bool showCancel}) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        title: Text("Order #${order["id"]}"),
-        subtitle: Text("Order details..."),
-        trailing: showCancel
-            ? TextButton(
-                child: const Text("Cancel"),
-                onPressed: () {
-                  setState(() => orderToCancel = order);
-                  _showCancelDialog();
-                },
-              )
-            : null,
-      ),
+    return Row(
+      children: [
+        Container(
+          width: double.infinity,
+          margin: EdgeInsets.all(12),
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.teal.shade50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.secondaryContainer,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                order["title"] ?? "No title",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              SizedBox(height: 4),
+              Text(
+                order["description"] ?? "No description",
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: 4),
+              Text(
+                "Location: ${order["location"] ?? "Unknown"}",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                "Price: \$${order["price"] ?? 0}",
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+        Spacer(),
+      ],
     );
   }
 
@@ -209,24 +348,24 @@ class _OrdersPageState extends State<OrdersPage>
   // -------------------------------------------
   // CANCEL ORDER DIALOG
   // -------------------------------------------
-  void _showCancelDialog() {
+  void _showCancelDialog(String id) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text("Cancel Order"),
           content: const Text(
-            "Are you sure you want to cancel this order? The product will become available again.",
+            "Are you sure you want to cancel your cart?? The products will become available again.",
           ),
           actions: [
             TextButton(
-              child: const Text("Keep Order"),
+              child: const Text("Keep Cart"),
               onPressed: () => Navigator.pop(context),
             ),
             ElevatedButton(
-              child: const Text("Cancel Order"),
+              child: const Text("Cancel Cart"),
               onPressed: () {
-                // handle cancel logic
+                ApiRequests().cancelOrder(id);
                 Navigator.pop(context);
               },
             ),

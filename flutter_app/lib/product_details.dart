@@ -68,12 +68,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     if (success) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Order placed!")));
-      Navigator.pushNamed(context, '/orders');
+      ).showSnackBar(const SnackBar(content: Text("Order Added to Cart!")));
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Failed to place order")));
+      ).showSnackBar(const SnackBar(content: Text("Failed to Add to Cart!")));
     }
 
     setState(() {
@@ -102,6 +101,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           backgroundColor: colors.primaryContainer,
         ),
         body: Center(child: CircularProgressIndicator()),
+        bottomNavigationBar: NavBar(),
       );
     }
 
@@ -113,6 +113,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           backgroundColor: colors.primaryContainer,
         ),
         body: Center(child: Text(errorText!)),
+        bottomNavigationBar: NavBar(),
       );
     }
 
@@ -129,6 +130,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
           ),
         ),
+        bottomNavigationBar: NavBar(),
       );
     }
 
@@ -341,6 +343,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           ],
         ),
       ),
+      bottomNavigationBar: NavBar(),
     );
   }
 }
