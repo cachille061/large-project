@@ -1,13 +1,14 @@
 import { useNavigate } from "react-router-dom";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface SellerInfoProps {
   sellerId: string;
   sellerName: string;
+  sellerProfilePicture?: string;
   location?: string;
 }
 
-export function SellerInfo({ sellerId, sellerName, location }: SellerInfoProps) {
+export function SellerInfo({ sellerId, sellerName, sellerProfilePicture, location }: SellerInfoProps) {
   const navigate = useNavigate();
 
   return (
@@ -32,6 +33,9 @@ export function SellerInfo({ sellerId, sellerName, location }: SellerInfoProps) 
         }}
       >
         <Avatar>
+          {sellerProfilePicture ? (
+            <AvatarImage src={sellerProfilePicture} alt={sellerName} style={{ objectFit: 'cover' }} />
+          ) : null}
           <AvatarFallback>
             {sellerName.charAt(0)}
           </AvatarFallback>

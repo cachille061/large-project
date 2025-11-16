@@ -131,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfilePicture = async (imageUrl: string) => {
     try {
       // Update profile picture via Better Auth API
-      const response = await fetch('/api/auth/update-user', {
+      const response = await fetch('http://localhost:3000/api/auth/update-user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,11 +143,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update profile picture');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Update failed:', errorData);
+        throw new Error(errorData.error || 'Failed to update profile picture');
       }
 
-      // Trigger a soft refresh instead of full page reload
-      window.dispatchEvent(new Event('profile-updated'));
+      // Force session refresh by reloading
+      window.location.reload();
     } catch (error) {
       console.error("Update profile picture error:", error);
       throw error;

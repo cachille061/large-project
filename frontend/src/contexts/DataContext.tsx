@@ -17,6 +17,7 @@ export interface Product {
   category: ProductCategory;
   sellerId: string;
   sellerName: string;
+  sellerProfilePicture?: string;
   status: ProductStatus;
   createdAt: string;
 }
