@@ -400,27 +400,26 @@ class ApiRequests {
     return false;
   }
 
-  Future<bool> checkoutOrders() async {
+  Future<String> getStripeURL(String id) async {
     final sessionToken = await storage.read(key: tokenKey);
-    List current = [];
-    List prev = [];
 
     final url = Uri.parse("$BACKEND_URL/api/payments/stripe/checkout-session");
-    final response = await http.get(
+    final response = await http.post(
       url,
       headers: {
         'Content-Type': 'application/json',
         'Cookie': 'better-auth.session_token=$sessionToken',
       },
+      body: jsonEncode({"orderId": id}),
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
-      debugPrint("got current ${response.body}");
-      final data = jsonDecode(response.body)[0];
-      current = data["items"];
+      debugPrint("checking out... ${response.body}");
+      final data = jsonDecode(response.body);
+      return data["url"];
     } else {
       debugPrint(response.body);
     }
 
-    return false;
+    return "";
   }
 }

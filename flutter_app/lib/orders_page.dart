@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/main.dart';
 import 'package:flutter_app/api_requests.dart';
 import 'package:flutter_app/product_details.dart';
+import 'package:flutter_app/stripe_order.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -18,6 +19,7 @@ class _OrdersPageState extends State<OrdersPage>
   List<dynamic> pendingOrders = [];
   List<dynamic> completedOrders = [];
   String orderId = "";
+  bool showWebView = false;
 
   dynamic orderToCancel; // selected order
 
@@ -54,8 +56,14 @@ class _OrdersPageState extends State<OrdersPage>
     );
   }
 
-  void _checkoutOrders() {
-    ApiRequests().checkoutOrders();
+  void _checkoutOrders() async {
+    final url = await ApiRequests().getStripeURL(orderId);
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => CheckoutPage(url: url),
+      ),
+    );
   }
 
   @override
@@ -99,7 +107,9 @@ class _OrdersPageState extends State<OrdersPage>
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colors.secondaryContainer,
                               ),
-                              onPressed: () => _checkoutOrders(),
+                              onPressed: () {
+                                _checkoutOrders();
+                              },
                               child: Text(
                                 "Checkout Cart",
                                 style: TextStyle(
