@@ -18,7 +18,7 @@ class ApiRequests {
     final apiUrl = BACKEND_URL;
     Uri url;
     if (id == null) {
-      debugPrint("Adding a product");
+      debugPrint("getting products");
       url = Uri.parse('$apiUrl/api/products');
     } else {
       debugPrint("editing $id");
@@ -26,9 +26,9 @@ class ApiRequests {
     }
     final response = await http.get(url);
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      debugPrint('Success: ${response.body}');
       final data = jsonDecode(response.body);
-      debugPrint('Success: $data');
       if (id == null) {
         return data["products"];
       } else {
@@ -311,6 +311,115 @@ class ApiRequests {
   }
 
   Future<bool> buyProduct(String id) async {
+    final sessionToken = await storage.read(key: tokenKey);
+
+    final url = Uri.parse("$BACKEND_URL/api/orders/current");
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'better-auth.session_token=$sessionToken',
+      },
+      body: jsonEncode({'productId': id}),
+    );
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      debugPrint("Success! ${response.body}");
+      return true;
+    } else {
+      debugPrint(response.body);
+      return false;
+    }
+  }
+
+  // returns both
+  Future<(List<dynamic>, List<dynamic>, String)> getOrders() async {
+    final sessionToken = await storage.read(key: tokenKey);
+    List current = [];
+    List prev = [];
+    String id = "";
+
+    {
+      final url = Uri.parse("$BACKEND_URL/api/orders/current");
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': 'better-auth.session_token=$sessionToken',
+        },
+      );
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        debugPrint("got current ${response.body}");
+        final data = jsonDecode(response.body)["orders"][0];
+        current = data["items"];
+        id = data["_id"];
+      } else {
+        debugPrint(response.body);
+      }
+    }
+    {
+      final url = Uri.parse("$BACKEND_URL/api/orders/previous");
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': 'better-auth.session_token=$sessionToken',
+        },
+      );
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        debugPrint("got prev ${response.body}");
+        final List data = jsonDecode(response.body)["orders"];
+        if (data.isNotEmpty) prev = data[0]["items"];
+      } else {
+        debugPrint(response.body);
+      }
+    }
+
+    return (current, prev, id);
+  }
+
+  Future<bool> cancelOrder(String id) async {
+    final sessionToken = await storage.read(key: tokenKey);
+
+    final url = Uri.parse("$BACKEND_URL/api/orders/$id/cancel");
+    debugPrint(url.toString());
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'better-auth.session_token=$sessionToken',
+      },
+      body: jsonEncode({"orderId": id}),
+    );
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      debugPrint("cancel Success ${response.body}");
+      return true;
+    } else {
+      debugPrint(response.body);
+    }
+
     return false;
+  }
+
+  Future<String> getStripeURL(String id) async {
+    final sessionToken = await storage.read(key: tokenKey);
+
+    final url = Uri.parse("$BACKEND_URL/api/payments/stripe/checkout-session");
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': 'better-auth.session_token=$sessionToken',
+      },
+      body: jsonEncode({"orderId": id}),
+    );
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      debugPrint("checking out... ${response.body}");
+      final data = jsonDecode(response.body);
+      return data["url"];
+    } else {
+      debugPrint(response.body);
+    }
+
+    return "";
   }
 }
