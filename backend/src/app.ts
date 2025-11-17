@@ -12,6 +12,7 @@ import paymentRoutes from "./routes/paymentRoutes";
 import stripeWebhookRoutes from "./routes/stripeWebhookRoutes";
 
 
+
 export const app = express();
 
 const useFlutterCors = process.env.USE_FLUTTER_CORS === 'true';
@@ -57,7 +58,7 @@ app.get("/health", (_req, res) => {
     });
 });
 
-// Stripe webhooks - must come BEFORE express.json()
+// Stripe webhooks
 app.use("/api/webhooks", stripeWebhookRoutes);
 
 // Better Auth routes - Express v5 syntax with *splat

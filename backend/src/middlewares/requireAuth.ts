@@ -10,6 +10,7 @@ declare global {
                 email: string;
                 name?: string | null | undefined;      // Allow null
                 image?: string | null | undefined;     // Allow null
+                emailVerified?: boolean;
             };
         }
     }
@@ -43,6 +44,7 @@ export const requireAuth = async (
             email: session.user.email,
             name: session.user.name,
             image: session.user.image,
+            emailVerified: session.user.emailVerified,
         };
 
         next();
@@ -54,7 +56,47 @@ export const requireAuth = async (
         });
     }
 };
+export const requireVerifiedEmail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const session = await auth.api.getSession({
+            headers: req.headers as any,
+        });
 
+        if (!session || !session.user) {
+            return res.status(401).json({
+                error: "Unauthorized",
+                message: "You must be logged in to access this resource",
+            });
+        }
+
+        if (!session.user.emailVerified) {
+            return res.status(403).json({
+                error: "Email not verified",
+                message: "Please verify your email address to access this resource",
+            });
+        }
+
+        req.user = {
+            id: session.user.id,
+            email: session.user.email,
+            name: session.user.name,
+            image: session.user.image,
+            emailVerified: session.user.emailVerified,
+        };
+
+        next();
+    } catch (error) {
+        console.error("Auth middleware error:", error);
+        return res.status(401).json({
+            error: "Unauthorized",
+            message: "Invalid or expired session",
+        });
+    }
+};
 /**
  * Optional auth middleware
  * Attaches user if authenticated, but doesn't block if not
@@ -75,6 +117,7 @@ export const optionalAuth = async (
                 email: session.user.email,
                 name: session.user.name,
                 image: session.user.image,
+                emailVerified: session.user.emailVerified,
             };
         }
 
