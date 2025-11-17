@@ -28,7 +28,10 @@ class LoginPageState extends State<LoginPage> {
   }
 
   _login() async {
-    final result = await ApiRequests().signInWithEmail(emailControl.text, passwordControl.text);
+    final result = await ApiRequests().signInWithEmail(
+      emailControl.text,
+      passwordControl.text,
+    );
     if (result == "success") {
       Navigator.push(
         context,
@@ -64,6 +67,7 @@ class LoginPageState extends State<LoginPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
             child: TextFormField(
+              obscureText: true,
               decoration: const InputDecoration(
                 border: UnderlineInputBorder(),
                 labelText: 'Enter your password',

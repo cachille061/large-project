@@ -14,7 +14,7 @@ late String BACKEND_URL;
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 // This function can be changed to something else by the search menu
 Future<List> Function() searchFunc = () async {
-  return await ApiRequests().getProducts();
+  return await ApiRequests().searchProducts(status: "available");
 };
 const CATEGORIES = [
   "Computer Parts",
@@ -150,7 +150,7 @@ class _ProductsListState extends State<ProductsList> with RouteAware {
       });
     } catch (error) {
       setState(() {
-        debugPrint(error.toString());
+        debugPrint("getProducts error: ${error.toString()}\n");
         loadingError = true;
         loading = false;
       });

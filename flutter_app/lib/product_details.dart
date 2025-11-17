@@ -3,6 +3,7 @@ import 'package:flutter_app/add_product_page.dart';
 import 'package:flutter_app/api_requests.dart';
 import 'package:flutter_app/main.dart';
 import 'package:flutter_app/sign_up_page.dart';
+import 'package:flutter_app/orders_page.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final String productId;
@@ -17,10 +18,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   bool loading = true;
   bool purchasing = false;
   String? errorText;
-  String? status;
   dynamic product;
   bool isSeller = false;
   bool isActive = false;
+  bool inCart = false;
   DateTime? uploadDate;
 
   @override
@@ -35,10 +36,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         id: widget.productId,
       ))[0];
       isSeller = await ApiRequests().isSeller(widget.productId);
+      final orders = await ApiRequests().getOrders();
+      final currentItems = orders.$1;
       isActive = fetchedProduct["status"] == "available";
 
       setState(() {
         product = fetchedProduct;
+        inCart = currentItems.any((item) {
+          return item["product"] == widget.productId;
+        });
         loading = false;
         uploadDate = DateTime.parse(product["createdAt"]);
       });
@@ -63,6 +69,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
     setState(() {
       purchasing = true;
+      _fetchProduct();
     });
 
     final success = await ApiRequests().buyProduct(product["_id"]);
@@ -70,11 +77,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     if (success) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Order Added to Cart!")));
+      ).showSnackBar(const SnackBar(content: Text("Order placed!")));
+      Navigator.pushNamed(context, '/orders');
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Failed to Add to Cart!")));
+      ).showSnackBar(const SnackBar(content: Text("Failed to place order")));
     }
 
     setState(() {
@@ -92,6 +100,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
+  void toCart() {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(builder: (BuildContext context) => OrdersPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -99,11 +114,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       return Scaffold(
         backgroundColor: colors.surface,
         appBar: AppBar(
-          title: const Text("Product Details"),
+          title: const Text("My Listings"),
           backgroundColor: colors.primaryContainer,
         ),
         body: Center(child: CircularProgressIndicator()),
-        bottomNavigationBar: NavBar(),
       );
     }
 
@@ -111,11 +125,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       return Scaffold(
         backgroundColor: colors.surface,
         appBar: AppBar(
-          title: const Text("Product Details"),
+          title: const Text("My Listings"),
           backgroundColor: colors.primaryContainer,
         ),
         body: Center(child: Text(errorText!)),
-        bottomNavigationBar: NavBar(),
       );
     }
 
@@ -123,7 +136,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       return Scaffold(
         backgroundColor: colors.surface,
         appBar: AppBar(
-          title: const Text("Product Details"),
+          title: const Text("My Listings"),
           backgroundColor: colors.primaryContainer,
         ),
         body: Center(
@@ -132,14 +145,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
           ),
         ),
-        bottomNavigationBar: NavBar(),
       );
     }
 
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: AppBar(
-        title: const Text("Product Details"),
+        title: const Text("My Listings"),
         backgroundColor: colors.primaryContainer,
       ),
       body: SingleChildScrollView(
@@ -229,6 +241,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           minimumSize: const Size.fromHeight(48),
                         ),
                       ),
+                    ] else if (inCart) ...[
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(8),
+                        color: colors.primaryContainer,
+                        child: const Text("Product is in your Cart!"),
+                      ),
+                      ElevatedButton(
+                        onPressed: toCart,
+                        child: Text(
+                          "Go to Cart",
+                          style: TextStyle(color: colors.onPrimaryContainer),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                      ),
                     ] else if (ApiRequests.loggedIn &&
                         !isSeller &&
                         isActive) ...[
@@ -236,7 +265,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         onPressed: purchasing ? null : handlePurchase,
                         icon: const Icon(Icons.shopping_cart),
                         label: Text(
-                          purchasing ? "Added to Cart!" : "Add to Cart",
+                          purchasing ? "Processing..." : "Buy Now",
                           style: TextStyle(color: colors.onTertiaryContainer),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -345,7 +374,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           ],
         ),
       ),
-      bottomNavigationBar: NavBar(),
     );
   }
 }
