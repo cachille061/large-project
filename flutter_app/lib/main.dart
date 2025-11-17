@@ -7,6 +7,7 @@ import 'package:flutter_app/api_requests.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app/add_product_page.dart';
+import 'package:flutter_app/orders_page.dart';
 import 'package:http/http.dart';
 
 late String BACKEND_URL;
@@ -149,6 +150,7 @@ class _ProductsListState extends State<ProductsList> with RouteAware {
       });
     } catch (error) {
       setState(() {
+        debugPrint(error.toString());
         loadingError = true;
         loading = false;
       });
@@ -556,6 +558,13 @@ class _NavBarState extends State<NavBar> {
     );
   }
 
+  void _historyButton(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(builder: (BuildContext context) => OrdersPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
@@ -598,7 +607,9 @@ class _NavBarState extends State<NavBar> {
               IconButton(
                 icon: Icon(Icons.history),
                 color: colors.onPrimaryContainer,
-                onPressed: () {},
+                onPressed: () {
+                  _historyButton(context);
+                },
               ),
           ],
         ),
