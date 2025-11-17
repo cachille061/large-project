@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:flutter_app/add_product_page.dart';
 import 'package:flutter_app/api_requests.dart';
 import 'package:flutter_app/main.dart';
@@ -69,7 +70,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
     setState(() {
       purchasing = true;
-      _fetchProduct();
     });
 
     final success = await ApiRequests().buyProduct(product["_id"]);
@@ -78,7 +78,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Order placed!")));
-      Navigator.pushNamed(context, '/orders');
+      setState(() {
+        inCart = true;
+      });
     } else {
       ScaffoldMessenger.of(
         context,
@@ -146,6 +148,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           ),
         ),
       );
+    }
+
+    List<Widget> images = [];
+    List imageUrls = product["images"];
+    for (int i = 0; i < imageUrls.length; i++) {
+      Widget imageBody;
+      String imageURL = imageUrls[i].toString();
+      if (imageURL != "") {
+        if (imageURL.contains("http")) {
+          imageBody = Image.network(imageURL);
+        } else {
+          String base64String = imageURL.split(',').last;
+          imageBody = Image.memory(base64Decode(base64String));
+        }
+      } else {
+        imageBody = const Icon(Icons.image, size: 40);
+      }
+
+      images.add(imageBody);
     }
 
     return Scaffold(
@@ -303,7 +324,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     const SizedBox(height: 16),
 
                     // Product Details
-                    Text("Product Details"),
+                    Text("Images:"),
+                    for (Widget image in images) image,
                     const SizedBox(height: 16),
 
                     // Category
@@ -332,7 +354,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      VALID_TO_DISPLAY_CONDITION["condition"].toString(),
+                      VALID_TO_DISPLAY_CONDITION[product["condition"]]
+                          .toString(),
                       style: const TextStyle(height: 1.6),
                     ),
 

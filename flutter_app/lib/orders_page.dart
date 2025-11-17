@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_app/main.dart';
 import 'package:flutter_app/api_requests.dart';
@@ -18,6 +20,7 @@ class _OrdersPageState extends State<OrdersPage>
   List<dynamic> allOrders = [];
   List<dynamic> pendingOrders = [];
   List<dynamic> completedOrders = [];
+  List<dynamic> cancelledOrders = [];
   String orderId = "";
   bool showWebView = false;
 
@@ -26,17 +29,22 @@ class _OrdersPageState extends State<OrdersPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     getOrders();
   }
 
-  void getOrders() async {
+  Future<void> getOrders() async {
     final (List, List, String) orders = await ApiRequests().getOrders();
     setState(() {
       pendingOrders = orders.$1;
-      completedOrders = orders.$2;
+      for (dynamic order in orders.$2) {
+        if (order["status"] == "FULFILLED")
+          completedOrders.add(order);
+        else
+          cancelledOrders.add(order);
+      }
       orderId = orders.$3;
-      allOrders = orders.$1 + orders.$2;
+      allOrders = pendingOrders + completedOrders + cancelledOrders;
     });
   }
 
@@ -160,6 +168,7 @@ class _OrdersPageState extends State<OrdersPage>
             tabs: [
               Tab(text: "Cart (${pendingOrders.length})"),
               Tab(text: "Completed (${completedOrders.length})"),
+              Tab(text: "Cancelled (${cancelledOrders.length})"),
             ],
           ),
           Expanded(
@@ -176,6 +185,12 @@ class _OrdersPageState extends State<OrdersPage>
                   completedOrders,
                   icon: Icons.inventory_2_outlined,
                   title: "No completed orders",
+                  showCancel: false,
+                ),
+                _buildWithEmpty(
+                  cancelledOrders,
+                  icon: Icons.inventory_2_outlined,
+                  title: "No cancelled orders",
                   showCancel: false,
                 ),
               ],
@@ -209,68 +224,88 @@ class _OrdersPageState extends State<OrdersPage>
     return ListView.builder(
       itemCount: orders.length,
       itemBuilder: (context, i) {
-        final product = orders[i];
-        debugPrint("order: $product");
+        List items = orders[i]["items"];
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: ClampingScrollPhysics(),
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: colors.secondaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.image, size: 40),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 130,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              product["title"],
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 18),
-                            ),
-                            Text(
-                              "\$${product["price"].toString()}",
-                              style: TextStyle(
-                                color: colors.onSecondaryContainer,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                          ],
-                        ),
+          itemCount: items.length,
+          itemBuilder: (context, i) {
+            final product = items[i];
+            debugPrint("order: $product");
+            final String imageURL = product["imageUrl"].toString();
+            Widget imageBody;
+            if (imageURL != "") {
+              if (imageURL.contains("http")) {
+                imageBody = Image.network(imageURL);
+              } else {
+                String base64String = imageURL.split(',').last;
+                imageBody = Image.memory(base64Decode(base64String));
+              }
+            } else
+              imageBody = const Icon(Icons.image, size: 40);
+
+            return Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: colors.secondaryContainer,
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      Spacer(),
-                      Column(
+                      child: imageBody,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Row(
                         children: [
-                          SizedBox(
-                            width: 100,
-                            height: 30,
-                            child: OutlinedButton(
-                              onPressed: () =>
-                                  _clickProduct(product["product"]),
-                              child: Text("Details"),
+                          Container(
+                            width: 130,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  product["title"],
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 18),
+                                ),
+                                Text(
+                                  "\$${product["price"].toString()}",
+                                  style: TextStyle(
+                                    color: colors.onSecondaryContainer,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                              ],
                             ),
+                          ),
+                          Spacer(),
+                          Column(
+                            children: [
+                              SizedBox(
+                                width: 100,
+                                height: 30,
+                                child: OutlinedButton(
+                                  onPressed: () =>
+                                      _clickProduct(product["product"]),
+                                  child: Text("Details"),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -370,13 +405,16 @@ class _OrdersPageState extends State<OrdersPage>
           actions: [
             TextButton(
               child: const Text("Keep Cart"),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () async {
+                Navigator.pop(context);
+              },
             ),
             ElevatedButton(
               child: const Text("Cancel Cart"),
-              onPressed: () {
-                ApiRequests().cancelOrder(id);
+              onPressed: () async {
+                await ApiRequests().cancelOrder(id);
                 Navigator.pop(context);
+                await getOrders();
               },
             ),
           ],

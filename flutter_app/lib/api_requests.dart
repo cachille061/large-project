@@ -328,7 +328,7 @@ class ApiRequests {
       body: jsonEncode({'productId': id}),
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
-      debugPrint("Success! ${response.body}");
+      debugPrint("Buy Button Success! ${response.body}");
       return true;
     } else {
       debugPrint(response.body);
@@ -356,7 +356,7 @@ class ApiRequests {
         debugPrint("got current ${response.body}");
         final List data = jsonDecode(response.body)["orders"];
         if (data.isNotEmpty) {
-          current = data[0]["items"];
+          current = data;
           id = data[0]["_id"];
         }
       } else {
@@ -375,7 +375,7 @@ class ApiRequests {
       if (response.statusCode == 201 || response.statusCode == 200) {
         debugPrint("got prev ${response.body}");
         final List data = jsonDecode(response.body)["orders"];
-        if (data.isNotEmpty) prev = data[0]["items"];
+        if (data.isNotEmpty) prev = data;
       } else {
         debugPrint(response.body);
       }
