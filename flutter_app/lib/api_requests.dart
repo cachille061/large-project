@@ -90,8 +90,8 @@ class ApiRequests {
     }
   }
 
-  Future<List<dynamic>> getMyProducts() async {
-    String sellerId = await getMyId();
+  Future<List<dynamic>> getSellerProducts(String id) async {
+    String sellerId = id;
     final apiUrl = BACKEND_URL;
     final url = Uri.parse('$apiUrl/api/products/seller/$sellerId');
     final response = await http.get(url);

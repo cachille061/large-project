@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/api_requests.dart';
 import 'package:flutter_app/main.dart';
 import 'package:flutter_app/add_product_page.dart';
+import 'package:flutter_app/product_details.dart';
 
 class MyListingsPage extends StatefulWidget {
-  const MyListingsPage({super.key});
+  final String sellerId;
+  const MyListingsPage({super.key, required this.sellerId});
 
   @override
   State<MyListingsPage> createState() => _MyListingsPageState();
@@ -14,6 +16,7 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
   String? productToDelete;
   bool loading = false;
   bool loadingError = false;
+  bool myPage = false;
 
   List<dynamic> myProducts = [];
 
@@ -24,10 +27,14 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
     });
 
     try {
-      final fetchedProducts = await ApiRequests().getMyProducts();
+      final fetchedProducts = await ApiRequests().getSellerProducts(
+        widget.sellerId,
+      );
+      final myId = await ApiRequests().getMyId();
       setState(() {
         myProducts = fetchedProducts;
         loading = false;
+        myPage = (myId == widget.sellerId);
       });
     } catch (error) {
       setState(() {
@@ -76,7 +83,7 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
 
     final myOrders = <Map<String, dynamic>>[];
     final activeProducts = myProducts
-        .where((p) => p["status"] == "active")
+        .where((p) => p["status"] == "available")
         .toList();
     final soldProducts = myProducts
         .where((p) => p["status"] == "sold")
@@ -85,7 +92,7 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: AppBar(
-        title: const Text("My Listings"),
+        title: const Text("Seller Info"),
         backgroundColor: colors.primaryContainer,
       ),
       body: Padding(
@@ -99,12 +106,13 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("My Listings", style: TextStyle(fontSize: 24)),
+                    Text("Seller Info", style: TextStyle(fontSize: 24)),
                     SizedBox(height: 4),
-                    Text(
-                      "Manage your products and sales",
-                      style: TextStyle(color: colors.onPrimaryContainer),
-                    ),
+                    if (myPage)
+                      Text(
+                        "Manage your products and sales",
+                        style: TextStyle(color: colors.onPrimaryContainer),
+                      ),
                   ],
                 ),
                 ElevatedButton.icon(
@@ -150,7 +158,7 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
                   children: [
                     const TabBar(
                       tabs: [
-                        Tab(text: "My Products"),
+                        Tab(text: "Listings"),
                         Tab(text: "Sales"),
                       ],
                     ),
@@ -213,10 +221,12 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
       });
       final api = ApiRequests();
       await api.deleteProduct(id);
-      final updated = await api.getMyProducts();
+      final updated = await api.getSellerProducts(widget.sellerId);
 
       try {
-        final fetchedProducts = await ApiRequests().getMyProducts();
+        final fetchedProducts = await ApiRequests().getSellerProducts(
+          widget.sellerId,
+        );
         setState(() {
           myProducts = fetchedProducts;
           loading = false;
@@ -229,6 +239,15 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
           loading = false;
         });
       }
+    }
+
+    void _clickProduct(String id) {
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (BuildContext context) => ProductDetailPage(productId: id),
+        ),
+      );
     }
 
     final colors = Theme.of(context).colorScheme;
@@ -289,46 +308,58 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
                       Spacer(),
                       Column(
                         children: [
-                          SizedBox(
-                            width: 100,
-                            height: 30,
-                            child: OutlinedButton(
-                              onPressed: () {
-                                editProductButton(context, product["_id"]);
-                              },
-                              child: const Text("Edit"),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: 100,
-                            height: 30,
-                            child: OutlinedButton(
-                              onPressed: () {},
-                              child: Text(
-                                product["status"] == "available"
-                                    ? "Delist"
-                                    : "List",
+                          if (myPage)
+                            SizedBox(
+                              width: 100,
+                              height: 30,
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  editProductButton(context, product["_id"]);
+                                },
+                                child: const Text("Edit"),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: 100,
-                            height: 30,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: colors.errorContainer,
-                              ),
-                              onPressed: () => deleteProduct(product["_id"]),
-                              child: Text(
-                                "Delete",
-                                style: TextStyle(
-                                  color: colors.onErrorContainer,
+                          if (myPage) const SizedBox(height: 8),
+                          if (myPage)
+                            SizedBox(
+                              width: 100,
+                              height: 30,
+                              child: OutlinedButton(
+                                onPressed: () {},
+                                child: Text(
+                                  product["status"] == "available"
+                                      ? "Delist"
+                                      : "List",
                                 ),
                               ),
                             ),
-                          ),
+                          if (myPage) const SizedBox(height: 8),
+                          if (myPage)
+                            SizedBox(
+                              width: 100,
+                              height: 30,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: colors.errorContainer,
+                                ),
+                                onPressed: () => deleteProduct(product["_id"]),
+                                child: Text(
+                                  "Delete",
+                                  style: TextStyle(
+                                    color: colors.onErrorContainer,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          if (!myPage)
+                            SizedBox(
+                              width: 100,
+                              height: 30,
+                              child: OutlinedButton(
+                                onPressed: () => _clickProduct(product["_id"]),
+                                child: Text("Details"),
+                              ),
+                            ),
                         ],
                       ),
                     ],

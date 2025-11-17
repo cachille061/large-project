@@ -549,11 +549,12 @@ class _NavBarState extends State<NavBar> {
     );
   }
 
-  void _listingsButton(BuildContext context) {
+  void _listingsButton(BuildContext context) async {
+    String id = await ApiRequests().getMyId();
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (BuildContext context) => MyListingsPage(),
+        builder: (BuildContext context) => MyListingsPage(sellerId: id),
       ),
     );
   }
@@ -605,7 +606,7 @@ class _NavBarState extends State<NavBar> {
               ),
             if (ApiRequests.loggedIn)
               IconButton(
-                icon: Icon(Icons.history),
+                icon: Icon(Icons.shopping_cart),
                 color: colors.onPrimaryContainer,
                 onPressed: () {
                   _historyButton(context);

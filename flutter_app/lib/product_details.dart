@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter_app/add_product_page.dart';
 import 'package:flutter_app/api_requests.dart';
+import 'package:flutter_app/listings.dart';
 import 'package:flutter_app/main.dart';
 import 'package:flutter_app/sign_up_page.dart';
 import 'package:flutter_app/orders_page.dart';
@@ -20,7 +21,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   bool purchasing = false;
   String? errorText;
   dynamic product;
-  bool isSeller = false;
+  bool iAmSeller = false;
   bool isActive = false;
   bool inCart = false;
   DateTime? uploadDate;
@@ -36,9 +37,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       final fetchedProduct = (await ApiRequests().getProducts(
         id: widget.productId,
       ))[0];
-      isSeller = await ApiRequests().isSeller(widget.productId);
+      iAmSeller = await ApiRequests().isSeller(widget.productId);
       final orders = await ApiRequests().getOrders();
-      final currentItems = orders.$1;
+      final currentOrders = orders.$1;
+      List currentOrder = [];
+      List currentItems = [];
+      if (currentOrders.isNotEmpty) {
+        currentItems = currentOrders[0]["items"];
+      }
+
       isActive = fetchedProduct["status"] == "available";
 
       setState(() {
@@ -169,6 +176,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       images.add(imageBody);
     }
 
+    _gotoSeller() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) {
+            return MyListingsPage(sellerId: product["sellerId"]);
+          },
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: AppBar(
@@ -245,12 +263,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     const SizedBox(height: 24),
 
                     // Action Buttons
-                    if (isSeller) ...[
+                    if (iAmSeller) ...[
                       Container(
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(8),
                         color: colors.primaryContainer,
-                        child: const Text("This is your listing"),
+                        child: Text(
+                          "This is your listing",
+                          style: TextStyle(color: colors.onPrimaryContainer),
+                        ),
                       ),
                       ElevatedButton(
                         onPressed: handleEdit,
@@ -267,7 +288,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(8),
                         color: colors.primaryContainer,
-                        child: const Text("Product is in your Cart!"),
+                        child: Text(
+                          "Product is in your Cart!",
+                          style: TextStyle(color: colors.onPrimaryContainer),
+                        ),
                       ),
                       ElevatedButton(
                         onPressed: toCart,
@@ -280,7 +304,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         ),
                       ),
                     ] else if (ApiRequests.loggedIn &&
-                        !isSeller &&
+                        !iAmSeller &&
                         isActive) ...[
                       ElevatedButton.icon(
                         onPressed: purchasing ? null : handlePurchase,
@@ -320,11 +344,38 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     const SizedBox(height: 16),
 
                     // Seller Info
-                    Text("Seller Info"),
+                    Text(
+                      "Seller Info: ",
+                      style: TextStyle(
+                        color: colors.onTertiaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton.icon(
+                      onPressed: _gotoSeller,
+                      icon: const Icon(Icons.person),
+                      label: Text(
+                        product["sellerName"],
+                        style: TextStyle(color: colors.onTertiaryContainer),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                        backgroundColor: colors.tertiaryContainer,
+                        iconColor: colors.onTertiaryContainer,
+                      ),
+                    ),
                     const SizedBox(height: 16),
 
                     // Product Details
-                    Text("Images:"),
+                    Text(
+                      "Images:",
+                      style: TextStyle(
+                        color: colors.onTertiaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     for (Widget image in images) image,
                     const SizedBox(height: 16),
 
