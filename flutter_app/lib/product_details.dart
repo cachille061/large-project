@@ -17,6 +17,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   bool loading = true;
   bool purchasing = false;
   String? errorText;
+  String? status;
   dynamic product;
   bool isSeller = false;
   bool isActive = false;
@@ -43,6 +44,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       });
     } catch (e) {
       setState(() {
+        debugPrint(e.toString());
         errorText = 'Failed to load product';
         loading = false;
       });

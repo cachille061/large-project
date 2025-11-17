@@ -68,7 +68,7 @@ class MyApp extends StatelessWidget {
       title: 'COP4331 Group 2',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
       ),
       home: const HomePage(),
       navigatorObservers: [routeObserver],
@@ -320,7 +320,7 @@ class _SearchMenuState extends State<SearchMenu> {
         maxPrice.text.isEmpty &&
         location.text.isEmpty) {
       searchFunc = () async {
-        return await ApiRequests().getProducts();
+        return await ApiRequests().searchProducts(status: "available");
       };
     } else {
       searchFunc = () async {
@@ -330,6 +330,7 @@ class _SearchMenuState extends State<SearchMenu> {
           condition: selectedConditions.isEmpty ? null : selectedConditions[0],
           minPrice: minPrice.text.isEmpty ? null : double.parse(minPrice.text),
           maxPrice: maxPrice.text.isEmpty ? null : double.parse(maxPrice.text),
+          status: "available",
         );
       };
     }

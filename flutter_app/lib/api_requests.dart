@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class ApiRequests {
   static FlutterSecureStorage storage = FlutterSecureStorage();
   static const tokenKey = "session_token";
+  static const cookieName = "__Secure-better-auth.session_token";
   static bool loggedIn = false;
   Future<void> setup() async {
     if (await storage.containsKey(key: tokenKey)) {
@@ -47,6 +48,7 @@ class ApiRequests {
     double? minPrice,
     double? maxPrice,
     String? sortBy,
+    String? status,
     int? page,
     int? limit,
   }) async {
@@ -64,6 +66,7 @@ class ApiRequests {
     if (sortBy != null && sortBy.isNotEmpty) queryParams['sortBy'] = sortBy;
     if (page != null) queryParams['page'] = page.toString();
     if (limit != null) queryParams['limit'] = limit.toString();
+    if (status != null) queryParams['status'] = status.toString();
 
     final uri = Uri.parse(baseUrl).replace(queryParameters: queryParams);
 
@@ -73,7 +76,7 @@ class ApiRequests {
       uri,
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': 'better-auth.session_token=$sessionToken',
+        'Cookie': '$cookieName=$sessionToken',
       },
     );
 
@@ -111,7 +114,7 @@ class ApiRequests {
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': 'better-auth.session_token=$sessionToken',
+        'Cookie': '$cookieName=$sessionToken',
       },
     );
 
@@ -158,10 +161,12 @@ class ApiRequests {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'password': password}),
     );
+    debugPrint(response.body);
     if (response.statusCode == 200 || response.statusCode == 201) {
       // Single instance of secure storage
       final storage = FlutterSecureStorage();
       final setCookie = response.headers['set-cookie'];
+      debugPrint(setCookie.toString());
       final token = setCookie?.split('=')[1].split(';')[0];
       await storage.write(key: tokenKey, value: token);
       loggedIn = true;
@@ -189,9 +194,10 @@ class ApiRequests {
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': 'better-auth.session_token=$sessionToken',
+        'Cookie': '$cookieName=$sessionToken',
       },
     );
+    debugPrint("session info: ${response.body}");
     if (response.statusCode == 200) {
       return (true, jsonDecode(response.body));
     } else {
@@ -271,7 +277,7 @@ class ApiRequests {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Cookie': 'better-auth.session_token=$sessionToken',
+          'Cookie': '$cookieName=$sessionToken',
         },
         body: jsonEncode(body),
       );
@@ -280,7 +286,7 @@ class ApiRequests {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Cookie': 'better-auth.session_token=$sessionToken',
+          'Cookie': '$cookieName=$sessionToken',
         },
         body: jsonEncode(body),
       );
