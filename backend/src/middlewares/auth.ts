@@ -26,7 +26,7 @@ const db = client.db(); // Uses the database specified in the connection string
 
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = process.env.FROM_EMAIL || 'no-reply@coremarket.csprojects.dev';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'no-reply@localhost';
 const APP_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 const useFlutterCors = process.env.USE_FLUTTER_CORS === 'true';

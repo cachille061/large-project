@@ -1,5 +1,5 @@
 /**
- * Format a number as a price with dollar sign and commas
+ * "This utility formats numbers as currency - simple but critical for our e-commerce app.
  * @param price - Price as number or string
  * @returns Formatted price string (e.g., "$1,234.56")
  */
