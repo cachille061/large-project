@@ -243,6 +243,7 @@ class ApiRequests {
     required String category,
     required String condition,
     required String location,
+    String? status,
     String? imageUrl,
     bool edit = false,
     String? id,
@@ -267,6 +268,8 @@ class ApiRequests {
       'category': category,
       'location': location,
     };
+    if (imageUrl != null) body['imageUrl'] = imageUrl;
+    if (status != null) body['status'] = status;
 
     final sessionToken = await storage.read(key: tokenKey);
 
@@ -428,5 +431,30 @@ class ApiRequests {
     }
 
     return "";
+  }
+
+  Future<bool> resetPassword(String email) async {
+    final sessionToken = await storage.read(key: tokenKey);
+
+    final url = Uri.parse("$BACKEND_URL/api/auth/forget-password");
+    final body = {"email": email, "redirectTo": "$FRONTEND_URL/reset-password"};
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': FRONTEND_URL,
+        'Cookie': '$cookieName=$sessionToken',
+      },
+      body: jsonEncode(body),
+    );
+    debugPrint("reset email sent!... ${response.body}");
+    debugPrint(response.request.toString());
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return true;
+    } else {
+      debugPrint(body.toString());
+    }
+
+    return false;
   }
 }

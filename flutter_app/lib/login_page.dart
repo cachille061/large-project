@@ -15,6 +15,8 @@ class LoginPageState extends State<LoginPage> {
   final emailTest = "test";
   final passwordTest = "1234";
   var errorText = "";
+  bool resettingPassword = false;
+  String resetPasswordResponse = "";
 
   @override
   void initState() {
@@ -44,12 +46,27 @@ class LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _resetPassword(String email) async {
+    final success = await ApiRequests().resetPassword(email);
+    if (success) {
+      setState(
+        () => resetPasswordResponse =
+            "Reset password instructions sent to $email",
+      );
+    } else {
+      setState(() => resetPasswordResponse = "Please try again!");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    String loginText = "Login";
+    if (resettingPassword) loginText = "Password Reset";
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        title: Text(loginText),
+        backgroundColor: colors.primaryContainer,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,33 +81,70 @@ class LoginPageState extends State<LoginPage> {
               controller: emailControl,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-            child: TextFormField(
-              obscureText: true,
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Enter your password',
-              ),
-              controller: passwordControl,
-            ),
-          ),
-          SizedBox(
-            width: 250,
-            child: Padding(
-              padding: EdgeInsetsGeometry.all(20),
-              child: FloatingActionButton(
-                onPressed: () => _login(),
-                child: const Text("Login", style: TextStyle(fontSize: 24)),
+          if (!resettingPassword)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+              child: TextFormField(
+                obscureText: true,
+                decoration: const InputDecoration(
+                  border: UnderlineInputBorder(),
+                  labelText: 'Enter your password',
+                ),
+                controller: passwordControl,
               ),
             ),
-          ),
+          if (!resettingPassword)
+            TextButton(
+              onPressed: () => setState(() => resettingPassword = true),
+              child: const Text("Reset Password"),
+            ),
+          if (!resettingPassword)
+            SizedBox(
+              width: 250,
+              child: Padding(
+                padding: EdgeInsetsGeometry.all(20),
+                child: FloatingActionButton(
+                  onPressed: () => _login(),
+                  child: const Text("Login", style: TextStyle(fontSize: 24)),
+                ),
+              ),
+            ),
+          if (resettingPassword)
+            SizedBox(
+              width: 250,
+              child: Padding(
+                padding: EdgeInsetsGeometry.all(20),
+                child: FloatingActionButton(
+                  onPressed: () => _resetPassword(emailControl.text),
+                  child: const Text(
+                    "Send Instructions",
+                    style: TextStyle(fontSize: 24),
+                  ),
+                ),
+              ),
+            ),
+          if (resetPasswordResponse != "")
+            Card(
+              color: colors.surface,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 16,
+                ),
+                child: Text(
+                  resetPasswordResponse,
+                  style: TextStyle(color: colors.onSurface),
+                ),
+              ),
+            ),
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
             child: Text(errorText),
           ),
         ],
       ),
+      bottomNavigationBar: NavBar(),
     );
   }
 

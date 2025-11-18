@@ -11,24 +11,27 @@ import 'package:flutter_app/orders_page.dart';
 import 'package:http/http.dart';
 
 late String BACKEND_URL;
+const FRONTEND_URL = "https://coremarket.csprojects.dev";
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 // This function can be changed to something else by the search menu
 Future<List> Function() searchFunc = () async {
   return await ApiRequests().searchProducts(status: "available");
 };
 const CATEGORIES = [
-  "Computer Parts",
-  "Storage & Memory",
-  "Keyboards",
-  "Mice & Peripherals",
-  "Audio & Headphones",
-  "Phones & Tablets",
-  "Cameras & Webcams",
-  "Printers & Scanners",
-  "Networking",
-  "Cables * Accessories",
-  "Gaming Consoles",
-  "Streaming Equipment",
+  'Laptops & Computers',
+  'Monitors & Displays',
+  'Computer Parts',
+  'Storage & Memory',
+  'Keyboards',
+  'Mice & Peripherals',
+  'Audio & Headphones',
+  'Phones & Tablets',
+  'Cameras & Webcams',
+  'Printers & Scanners',
+  'Networking',
+  'Cables & Accessories',
+  'Gaming Consoles',
+  'Streaming Equipment',
 ];
 const DISPLAY_CONDITIONS = [
   "New",
@@ -56,6 +59,7 @@ Future<void> main() async {
   await dotenv.load();
   BACKEND_URL = (dotenv.env['API_URL'] ?? '');
   if (BACKEND_URL == '') throw Error();
+  debugPrint(BACKEND_URL);
   await ApiRequests().setup();
   runApp(MyApp());
 }
@@ -403,13 +407,33 @@ class _SearchMenuState extends State<SearchMenu> {
               for (var category in CATEGORIES)
                 ChoiceChip(
                   label: Text(category),
-                  selected: selectedCategories.contains(category),
+                  selected: selectedCategories[0] == category,
                   onSelected: (isSelected) {
                     setState(() {
                       if (isSelected) {
-                        selectedCategories.add(category);
+                        selectedCategories[0] = category;
                       } else {
-                        selectedCategories.remove(category);
+                        selectedCategories.clear();
+                      }
+                    });
+                  },
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (var category in DISPLAY_CONDITIONS)
+                ChoiceChip(
+                  label: Text(category),
+                  selected: selectedCategories[0] == category,
+                  onSelected: (isSelected) {
+                    setState(() {
+                      if (isSelected) {
+                        selectedCategories[0] = category;
+                      } else {
+                        selectedCategories.clear();
                       }
                     });
                   },

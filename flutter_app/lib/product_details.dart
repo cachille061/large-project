@@ -190,7 +190,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: AppBar(
-        title: const Text("My Listings"),
+        title: const Text("Product Details"),
         backgroundColor: colors.primaryContainer,
       ),
       body: SingleChildScrollView(
@@ -227,7 +227,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          product["status"] == 'sold' ? 'Sold' : 'Delisted',
+                          product["status"],
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
