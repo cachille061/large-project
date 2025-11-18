@@ -1,0 +1,12 @@
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Block crawlers from private/admin areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /profile/edit
+Disallow: /orders/
+
+# Sitemap location (update with your actual sitemap URL when available)
+Sitemap: https://coremarket.csprojects.dev/sitemap.xml
