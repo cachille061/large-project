@@ -282,8 +282,8 @@ class SearchMenu extends StatefulWidget {
 }
 
 class _SearchMenuState extends State<SearchMenu> {
-  static final List<String> selectedCategories = [];
-  static final List<String> selectedConditions = [];
+  static final List<String> selectedCategories = [""];
+  static final List<String> selectedConditions = [""];
   static String savedSearch = "";
   static String savedMin = "";
   static String savedMax = "";
@@ -332,7 +332,9 @@ class _SearchMenuState extends State<SearchMenu> {
       searchFunc = () async {
         return await ApiRequests().searchProducts(
           query: searchText.text.isEmpty ? null : searchText.text,
-          category: selectedCategories.isEmpty ? null : selectedCategories[0],
+          category: selectedCategories.isEmpty
+              ? null
+              : DISPLAY_TO_VALID_CONDITION[selectedCategories[0]],
           condition: selectedConditions.isEmpty ? null : selectedConditions[0],
           minPrice: minPrice.text.isEmpty ? null : double.parse(minPrice.text),
           maxPrice: maxPrice.text.isEmpty ? null : double.parse(maxPrice.text),
@@ -352,8 +354,8 @@ class _SearchMenuState extends State<SearchMenu> {
       savedMin = "";
       savedMax = "";
       savedLocation = "";
-      selectedConditions.clear();
-      selectedCategories.clear();
+      selectedConditions[0] = "";
+      selectedCategories[0] = "";
     });
   }
 
@@ -407,13 +409,15 @@ class _SearchMenuState extends State<SearchMenu> {
               for (var category in CATEGORIES)
                 ChoiceChip(
                   label: Text(category),
-                  selected: selectedCategories[0] == category,
+                  selected:
+                      (selectedCategories.isNotEmpty &&
+                      selectedCategories[0] == category),
                   onSelected: (isSelected) {
                     setState(() {
                       if (isSelected) {
                         selectedCategories[0] = category;
                       } else {
-                        selectedCategories.clear();
+                        selectedCategories[0] = "";
                       }
                     });
                   },
@@ -421,19 +425,23 @@ class _SearchMenuState extends State<SearchMenu> {
             ],
           ),
           const SizedBox(height: 8),
+          Align(alignment: Alignment.centerLeft, child: Text('Conditions')),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             children: [
-              for (var category in DISPLAY_CONDITIONS)
+              for (var condition in DISPLAY_CONDITIONS)
                 ChoiceChip(
-                  label: Text(category),
-                  selected: selectedCategories[0] == category,
+                  label: Text(condition),
+                  selected:
+                      (selectedConditions.isNotEmpty &&
+                      selectedConditions[0] == condition),
                   onSelected: (isSelected) {
                     setState(() {
                       if (isSelected) {
-                        selectedCategories[0] = category;
+                        selectedConditions[0] = condition;
                       } else {
-                        selectedCategories.clear();
+                        selectedConditions[0] = "";
                       }
                     });
                   },

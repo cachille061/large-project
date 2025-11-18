@@ -249,7 +249,8 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
       itemBuilder: (context, i) {
         final product = myProducts[i];
         final bool detailsOnly =
-            (myPage && product["status"] == "sold" ||
+            (!myPage ||
+            product["status"] == "sold" ||
             product["status"] == "pending");
         return Card(
           child: Padding(

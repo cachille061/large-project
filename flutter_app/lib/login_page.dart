@@ -112,14 +112,12 @@ class LoginPageState extends State<LoginPage> {
           if (resettingPassword)
             SizedBox(
               width: 250,
+              height: 150,
               child: Padding(
                 padding: EdgeInsetsGeometry.all(20),
                 child: FloatingActionButton(
                   onPressed: () => _resetPassword(emailControl.text),
-                  child: const Text(
-                    "Send Instructions",
-                    style: TextStyle(fontSize: 24),
-                  ),
+                  child: const Text("Send Instructions"),
                 ),
               ),
             ),
