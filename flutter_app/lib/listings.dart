@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/api_requests.dart';
 import 'package:flutter_app/main.dart';
 import 'package:flutter_app/add_product_page.dart';
+import 'package:flutter_app/product_details.dart';
 
 class MyListingsPage extends StatefulWidget {
-  const MyListingsPage({super.key});
+  final String sellerId;
+  const MyListingsPage({super.key, required this.sellerId});
 
   @override
   State<MyListingsPage> createState() => _MyListingsPageState();
@@ -14,6 +16,9 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
   String? productToDelete;
   bool loading = false;
   bool loadingError = false;
+  bool myPage = false;
+  List activeProducts = [];
+  List soldProducts = [];
 
   List<dynamic> myProducts = [];
 
@@ -24,10 +29,18 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
     });
 
     try {
-      final fetchedProducts = await ApiRequests().getMyProducts();
+      final fetchedProducts = await ApiRequests().getSellerProducts(
+        widget.sellerId,
+      );
+      final myId = await ApiRequests().getMyId();
       setState(() {
         myProducts = fetchedProducts;
         loading = false;
+        myPage = (myId == widget.sellerId);
+        activeProducts = myProducts
+            .where((p) => p["status"] == "available")
+            .toList();
+        soldProducts = myProducts.where((p) => p["status"] == "sold").toList();
       });
     } catch (error) {
       setState(() {
@@ -74,18 +87,10 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
       );
     }
 
-    final myOrders = <Map<String, dynamic>>[];
-    final activeProducts = myProducts
-        .where((p) => p["status"] == "active")
-        .toList();
-    final soldProducts = myProducts
-        .where((p) => p["status"] == "sold")
-        .toList();
-
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: AppBar(
-        title: const Text("My Listings"),
+        title: const Text("Seller Info"),
         backgroundColor: colors.primaryContainer,
       ),
       body: Padding(
@@ -99,12 +104,13 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("My Listings", style: TextStyle(fontSize: 24)),
+                    Text("Seller Info", style: TextStyle(fontSize: 24)),
                     SizedBox(height: 4),
-                    Text(
-                      "Manage your products and sales",
-                      style: TextStyle(color: colors.onPrimaryContainer),
-                    ),
+                    if (myPage)
+                      Text(
+                        "Manage your products and sales",
+                        style: TextStyle(color: colors.onPrimaryContainer),
+                      ),
                   ],
                 ),
                 ElevatedButton.icon(
@@ -135,37 +141,10 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
               children: [
                 _buildStatCard("Active Listings", activeProducts.length),
                 _buildStatCard("Sold Products", soldProducts.length),
-                _buildStatCard("Total Sales", myOrders.length),
-                _buildStatCard(
-                  "Pending Sales",
-                  myOrders.where((o) => o["status"] == "pending").length,
-                ),
               ],
             ),
-
-            Expanded(
-              child: DefaultTabController(
-                length: 2,
-                child: Column(
-                  children: [
-                    const TabBar(
-                      tabs: [
-                        Tab(text: "My Products"),
-                        Tab(text: "Sales"),
-                      ],
-                    ),
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          _buildProductsTab(context),
-                          _buildSalesTab(myOrders),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            const SizedBox(height: 20),
+            _buildProductsTab(context),
           ],
         ),
       ),
@@ -193,7 +172,7 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
 
   Widget _buildProductsTab(BuildContext context) {
     if (myProducts.isEmpty) {
-      return const Center(child: Text("You haven't listed any myProducts yet"));
+      return const Center(child: Text("You haven't listed any products yet"));
     }
 
     void editProductButton(BuildContext context, String id) {
@@ -213,10 +192,12 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
       });
       final api = ApiRequests();
       await api.deleteProduct(id);
-      final updated = await api.getMyProducts();
+      final updated = await api.getSellerProducts(widget.sellerId);
 
       try {
-        final fetchedProducts = await ApiRequests().getMyProducts();
+        final fetchedProducts = await ApiRequests().getSellerProducts(
+          widget.sellerId,
+        );
         setState(() {
           myProducts = fetchedProducts;
           loading = false;
@@ -231,139 +212,171 @@ class _MyListingsPageState extends State<MyListingsPage> with RouteAware {
       }
     }
 
-    final colors = Theme.of(context).colorScheme;
+    void _clickProduct(String id) {
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (BuildContext context) => ProductDetailPage(productId: id),
+        ),
+      );
+    }
 
-    return ListView.builder(
-      itemCount: myProducts.length,
-      itemBuilder: (context, i) {
-        final product = myProducts[i];
-
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: colors.secondaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.image, size: 40),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 130,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              product["title"],
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 18),
-                            ),
-                            Text(
-                              "\$${product["price"].toString()}",
-                              style: TextStyle(
-                                color: colors.onSecondaryContainer,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              product["description"],
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: colors.onSecondaryContainer,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                          ],
-                        ),
-                      ),
-                      Spacer(),
-                      Column(
-                        children: [
-                          SizedBox(
-                            width: 100,
-                            height: 30,
-                            child: OutlinedButton(
-                              onPressed: () {
-                                editProductButton(context, product["_id"]);
-                              },
-                              child: const Text("Edit"),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: 100,
-                            height: 30,
-                            child: OutlinedButton(
-                              onPressed: () {},
-                              child: Text(
-                                product["status"] == "available"
-                                    ? "Delist"
-                                    : "List",
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: 100,
-                            height: 30,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: colors.errorContainer,
-                              ),
-                              onPressed: () => deleteProduct(product["_id"]),
-                              child: Text(
-                                "Delete",
-                                style: TextStyle(
-                                  color: colors.onErrorContainer,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSalesTab(List<Map<String, dynamic>> orders) {
-    if (orders.isEmpty) {
-      return const Center(child: Text("No sales yet"));
+    void _clickDelistOrList(product) async {
+      var imageUrl = product["imageUrl"];
+      String status = product["status"].toString();
+      if (status == "delisted") status = "available";
+      if (status == "available") status = "delisted";
+      ApiRequests().addEditProduct(
+        title: product["title"],
+        price: double.parse(product["price"].toString()),
+        description: product["description"],
+        category: product["category"],
+        condition: product["condition"],
+        location: product["location"],
+        status: status,
+        imageUrl: imageUrl,
+        edit: true,
+        id: product["_id"],
+      );
+      getProducts();
     }
 
     final colors = Theme.of(context).colorScheme;
 
     return ListView.builder(
-      itemCount: orders.length,
+      shrinkWrap: true,
+      itemCount: myProducts.length,
       itemBuilder: (context, i) {
-        final order = orders[i];
-
-        return ListTile(
-          leading: Container(
-            width: 50,
-            height: 50,
-            color: colors.secondaryContainer,
-            child: const Icon(Icons.image),
+        final product = myProducts[i];
+        final bool detailsOnly =
+            (!myPage ||
+            product["status"] == "sold" ||
+            product["status"] == "pending");
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Card(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                    child: Text(product["status"]),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: colors.secondaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.image, size: 40),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 130,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  product["title"],
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 18),
+                                ),
+                                Text(
+                                  "\$${product["price"].toString()}",
+                                  style: TextStyle(
+                                    color: colors.onSecondaryContainer,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  product["description"],
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: colors.onSecondaryContainer,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                              ],
+                            ),
+                          ),
+                          Spacer(),
+                          if (!detailsOnly)
+                            Column(
+                              children: [
+                                SizedBox(
+                                  width: 100,
+                                  height: 30,
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      editProductButton(
+                                        context,
+                                        product["_id"],
+                                      );
+                                    },
+                                    child: const Text("Edit"),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                SizedBox(
+                                  width: 100,
+                                  height: 30,
+                                  child: OutlinedButton(
+                                    onPressed: () =>
+                                        _clickDelistOrList(product),
+                                    child: Text(
+                                      product["status"] == "available"
+                                          ? "Delist"
+                                          : "List",
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                SizedBox(
+                                  width: 100,
+                                  height: 30,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: colors.errorContainer,
+                                    ),
+                                    onPressed: () =>
+                                        deleteProduct(product["_id"]),
+                                    child: Text(
+                                      "Delete",
+                                      style: TextStyle(
+                                        color: colors.onErrorContainer,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          if (detailsOnly)
+                            SizedBox(
+                              width: 100,
+                              height: 30,
+                              child: OutlinedButton(
+                                onPressed: () => _clickProduct(product["_id"]),
+                                child: Text("Details"),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          title: Text(order["productTitle"] ?? "Product"),
-          subtitle: Text(order["buyerName"] ?? "Buyer"),
-          trailing: Text(order["status"] ?? "status"),
         );
       },
     );

@@ -83,15 +83,15 @@ class ApiRequests {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       debugPrint('Success: $data');
-      return data["results"];
+      return data["products"];
     } else {
       debugPrint('Error: ${response.statusCode}');
       return [];
     }
   }
 
-  Future<List<dynamic>> getMyProducts() async {
-    String sellerId = await getMyId();
+  Future<List<dynamic>> getSellerProducts(String id) async {
+    String sellerId = id;
     final apiUrl = BACKEND_URL;
     final url = Uri.parse('$apiUrl/api/products/seller/$sellerId');
     final response = await http.get(url);
@@ -136,13 +136,9 @@ class ApiRequests {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'password': password}),
     );
+    debugPrint("signupresponse: ${response.body.toString()}");
     if (response.statusCode == 200 || response.statusCode == 201) {
       // Single instance of secure storage
-      final storage = FlutterSecureStorage();
-      final setCookie = response.headers['set-cookie'];
-      final token = setCookie?.split('=')[1].split(';')[0];
-      await storage.write(key: tokenKey, value: token);
-      loggedIn = true;
       return "success";
     } else if (jsonDecode(response.body)['message'] != null) {
       return jsonDecode(response.body)['message'];
@@ -166,8 +162,11 @@ class ApiRequests {
       // Single instance of secure storage
       final storage = FlutterSecureStorage();
       final setCookie = response.headers['set-cookie'];
-      debugPrint(setCookie.toString());
-      final token = setCookie?.split('=')[1].split(';')[0];
+      debugPrint("sign in response: ${response.body.toString()}\n");
+      if (setCookie == null || !setCookie.contains(cookieName)) {
+        return "error... cookie not set";
+      }
+      final token = setCookie.split('=')[1].split(';')[0];
       await storage.write(key: tokenKey, value: token);
       loggedIn = true;
       return "success";
@@ -244,6 +243,7 @@ class ApiRequests {
     required String category,
     required String condition,
     required String location,
+    String? status,
     String? imageUrl,
     bool edit = false,
     String? id,
@@ -268,6 +268,8 @@ class ApiRequests {
       'category': category,
       'location': location,
     };
+    if (imageUrl != null) body['imageUrl'] = imageUrl;
+    if (status != null) body['status'] = status;
 
     final sessionToken = await storage.read(key: tokenKey);
 
@@ -324,12 +326,12 @@ class ApiRequests {
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': 'better-auth.session_token=$sessionToken',
+        'Cookie': '$cookieName=$sessionToken',
       },
       body: jsonEncode({'productId': id}),
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
-      debugPrint("Success! ${response.body}");
+      debugPrint("Buy Button Success! ${response.body}");
       return true;
     } else {
       debugPrint(response.body);
@@ -350,14 +352,16 @@ class ApiRequests {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Cookie': 'better-auth.session_token=$sessionToken',
+          'Cookie': '$cookieName=$sessionToken',
         },
       );
       if (response.statusCode == 201 || response.statusCode == 200) {
         debugPrint("got current ${response.body}");
-        final data = jsonDecode(response.body)["orders"][0];
-        current = data["items"];
-        id = data["_id"];
+        final List data = jsonDecode(response.body)["orders"];
+        if (data.isNotEmpty) {
+          current = data;
+          id = data[0]["_id"];
+        }
       } else {
         debugPrint(response.body);
       }
@@ -368,13 +372,13 @@ class ApiRequests {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Cookie': 'better-auth.session_token=$sessionToken',
+          'Cookie': '$cookieName=$sessionToken',
         },
       );
       if (response.statusCode == 201 || response.statusCode == 200) {
         debugPrint("got prev ${response.body}");
         final List data = jsonDecode(response.body)["orders"];
-        if (data.isNotEmpty) prev = data[0]["items"];
+        if (data.isNotEmpty) prev = data;
       } else {
         debugPrint(response.body);
       }
@@ -392,7 +396,7 @@ class ApiRequests {
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': 'better-auth.session_token=$sessionToken',
+        'Cookie': '$cookieName=$sessionToken',
       },
       body: jsonEncode({"orderId": id}),
     );
@@ -414,7 +418,7 @@ class ApiRequests {
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': 'better-auth.session_token=$sessionToken',
+        'Cookie': '$cookieName=$sessionToken',
       },
       body: jsonEncode({"orderId": id}),
     );
@@ -427,5 +431,30 @@ class ApiRequests {
     }
 
     return "";
+  }
+
+  Future<bool> resetPassword(String email) async {
+    final sessionToken = await storage.read(key: tokenKey);
+
+    final url = Uri.parse("$BACKEND_URL/api/auth/forget-password");
+    final body = {"email": email, "redirectTo": "$FRONTEND_URL/reset-password"};
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': FRONTEND_URL,
+        'Cookie': '$cookieName=$sessionToken',
+      },
+      body: jsonEncode(body),
+    );
+    debugPrint("reset email sent!... ${response.body}");
+    debugPrint(response.request.toString());
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return true;
+    } else {
+      debugPrint(body.toString());
+    }
+
+    return false;
   }
 }

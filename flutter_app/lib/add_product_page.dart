@@ -59,6 +59,7 @@ class AddEditProductPageState extends State<AddEditProductPage> {
       location.text = product["location"];
       description.text = product["description"];
       productTitle.text = product["title"];
+      imageURL.text = product["imageUrl"].text;
       selectedCondition = VALID_TO_DISPLAY_CONDITION[product["condition"]];
       selectedCategory = product["category"];
     } catch (error) {
@@ -103,6 +104,7 @@ class AddEditProductPageState extends State<AddEditProductPage> {
       location: location.text,
       edit: widget.edit,
       id: widget.id,
+      imageUrl: imageURL.text,
     );
     debugPrint(result.$2);
     if (result.$1 == true) Navigator.pop(context);
@@ -232,6 +234,19 @@ class AddEditProductPageState extends State<AddEditProductPage> {
                       labelText: 'Description *',
                     ),
                     controller: description,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 16,
+                  ),
+                  child: TextFormField(
+                    decoration: const InputDecoration(
+                      border: UnderlineInputBorder(),
+                      labelText: 'ImageURL',
+                    ),
+                    controller: imageURL,
                   ),
                 ),
                 SizedBox(

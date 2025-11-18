@@ -11,24 +11,27 @@ import 'package:flutter_app/orders_page.dart';
 import 'package:http/http.dart';
 
 late String BACKEND_URL;
+const FRONTEND_URL = "https://coremarket.csprojects.dev";
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 // This function can be changed to something else by the search menu
 Future<List> Function() searchFunc = () async {
-  return await ApiRequests().getProducts();
+  return await ApiRequests().searchProducts(status: "available");
 };
 const CATEGORIES = [
-  "Computer Parts",
-  "Storage & Memory",
-  "Keyboards",
-  "Mice & Peripherals",
-  "Audio & Headphones",
-  "Phones & Tablets",
-  "Cameras & Webcams",
-  "Printers & Scanners",
-  "Networking",
-  "Cables * Accessories",
-  "Gaming Consoles",
-  "Streaming Equipment",
+  'Laptops & Computers',
+  'Monitors & Displays',
+  'Computer Parts',
+  'Storage & Memory',
+  'Keyboards',
+  'Mice & Peripherals',
+  'Audio & Headphones',
+  'Phones & Tablets',
+  'Cameras & Webcams',
+  'Printers & Scanners',
+  'Networking',
+  'Cables & Accessories',
+  'Gaming Consoles',
+  'Streaming Equipment',
 ];
 const DISPLAY_CONDITIONS = [
   "New",
@@ -56,6 +59,7 @@ Future<void> main() async {
   await dotenv.load();
   BACKEND_URL = (dotenv.env['API_URL'] ?? '');
   if (BACKEND_URL == '') throw Error();
+  debugPrint(BACKEND_URL);
   await ApiRequests().setup();
   runApp(MyApp());
 }
@@ -150,7 +154,7 @@ class _ProductsListState extends State<ProductsList> with RouteAware {
       });
     } catch (error) {
       setState(() {
-        debugPrint(error.toString());
+        debugPrint("getProducts error: ${error.toString()}\n");
         loadingError = true;
         loading = false;
       });
@@ -278,8 +282,8 @@ class SearchMenu extends StatefulWidget {
 }
 
 class _SearchMenuState extends State<SearchMenu> {
-  static final List<String> selectedCategories = [];
-  static final List<String> selectedConditions = [];
+  static final List<String> selectedCategories = [""];
+  static final List<String> selectedConditions = [""];
   static String savedSearch = "";
   static String savedMin = "";
   static String savedMax = "";
@@ -328,7 +332,9 @@ class _SearchMenuState extends State<SearchMenu> {
       searchFunc = () async {
         return await ApiRequests().searchProducts(
           query: searchText.text.isEmpty ? null : searchText.text,
-          category: selectedCategories.isEmpty ? null : selectedCategories[0],
+          category: selectedCategories.isEmpty
+              ? null
+              : DISPLAY_TO_VALID_CONDITION[selectedCategories[0]],
           condition: selectedConditions.isEmpty ? null : selectedConditions[0],
           minPrice: minPrice.text.isEmpty ? null : double.parse(minPrice.text),
           maxPrice: maxPrice.text.isEmpty ? null : double.parse(maxPrice.text),
@@ -348,8 +354,8 @@ class _SearchMenuState extends State<SearchMenu> {
       savedMin = "";
       savedMax = "";
       savedLocation = "";
-      selectedConditions.clear();
-      selectedCategories.clear();
+      selectedConditions[0] = "";
+      selectedCategories[0] = "";
     });
   }
 
@@ -403,13 +409,39 @@ class _SearchMenuState extends State<SearchMenu> {
               for (var category in CATEGORIES)
                 ChoiceChip(
                   label: Text(category),
-                  selected: selectedCategories.contains(category),
+                  selected:
+                      (selectedCategories.isNotEmpty &&
+                      selectedCategories[0] == category),
                   onSelected: (isSelected) {
                     setState(() {
                       if (isSelected) {
-                        selectedCategories.add(category);
+                        selectedCategories[0] = category;
                       } else {
-                        selectedCategories.remove(category);
+                        selectedCategories[0] = "";
+                      }
+                    });
+                  },
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Align(alignment: Alignment.centerLeft, child: Text('Conditions')),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (var condition in DISPLAY_CONDITIONS)
+                ChoiceChip(
+                  label: Text(condition),
+                  selected:
+                      (selectedConditions.isNotEmpty &&
+                      selectedConditions[0] == condition),
+                  onSelected: (isSelected) {
+                    setState(() {
+                      if (isSelected) {
+                        selectedConditions[0] = condition;
+                      } else {
+                        selectedConditions[0] = "";
                       }
                     });
                   },
@@ -549,11 +581,12 @@ class _NavBarState extends State<NavBar> {
     );
   }
 
-  void _listingsButton(BuildContext context) {
+  void _listingsButton(BuildContext context) async {
+    String id = await ApiRequests().getMyId();
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (BuildContext context) => MyListingsPage(),
+        builder: (BuildContext context) => MyListingsPage(sellerId: id),
       ),
     );
   }
@@ -605,7 +638,7 @@ class _NavBarState extends State<NavBar> {
               ),
             if (ApiRequests.loggedIn)
               IconButton(
-                icon: Icon(Icons.history),
+                icon: Icon(Icons.shopping_cart),
                 color: colors.onPrimaryContainer,
                 onPressed: () {
                   _historyButton(context);
