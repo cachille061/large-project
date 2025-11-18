@@ -1,5 +1,6 @@
 import React, { createContext, useContext } from "react";
 import { useSession, signIn, signUp, signOut } from "../lib/auth";
+import { authClient } from "../lib/auth";
 
 interface User {
   id: string;
@@ -118,9 +119,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (email: string): Promise<boolean> => {
     try {
-      // Better Auth password reset would be implemented here
-      // For now, return true to maintain compatibility
-      console.log("Password reset requested for:", email);
+      const { error } = await authClient.forgetPassword({
+        email,
+        redirectTo: "https://coremarket.csprojects.dev/reset-password",
+      }, {
+        onRequest: (ctx) => {
+          return {
+            ...ctx,
+            credentials: "include",
+          };
+        },
+      });
+
+      if (error) {
+        console.error("Password reset error:", error);
+        return false;
+      }
+
       return true;
     } catch (error) {
       console.error("Reset password error:", error);
